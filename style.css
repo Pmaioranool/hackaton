@@ -2,7 +2,7 @@
 body {
   background: linear-gradient(to bottom, #000000, #0a0a23);
   color: #00ffcc;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
   margin: 0;
   padding: 0;
   height: 100vh;
@@ -17,6 +17,7 @@ body {
   gap: 40px;
   align-items: center;
   justify-content: center;
+  width: 80%;
 }
 
 /* Canvas de jeu à gauche */
@@ -25,6 +26,7 @@ body {
   border-radius: 10px;
   background-color: #111;
   box-shadow: 0 0 15px #00ffcc;
+  width: 80%;
 }
 
 /* UI à droite */
