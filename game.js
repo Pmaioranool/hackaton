@@ -8,6 +8,8 @@ const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
 shootSound.volume = 0.3;
 
+let win = false;
+
 // === PLAYER SETUP ===
 let player = {
   x: canvas.width / 2 - 15,
@@ -296,6 +298,8 @@ function update() {
         boss.hp--;
         if (boss.hp <= 0) {
           alert("Boss vaincu ! GG !");
+          player.score += 1000;
+          win = true;
           resetGame();
         }
       }
@@ -344,8 +348,10 @@ function update() {
 }
 
 function resetGame() {
+  if (!win) {
+    player.score = 0;
+  }
   player.health = player.maxHealth;
-  player.score = 0;
   player.points = 0;
   bullets = [];
   enemies = [];
@@ -358,6 +364,7 @@ function resetGame() {
   boss = null;
   bossLaser = null;
   enemiesKilled = 0;
+  win = false;
   updateUI();
   updateHealthUI();
 }
