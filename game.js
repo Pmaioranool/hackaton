@@ -11,14 +11,24 @@ let player = {
   height: 30,
   color: "lime",
   speed: 7,
+  baseSpeed: 7,  // Vitesse de base du joueur
   points: 0,
   score: 0,
   powerups: [],
+  // Propriétés de power-ups
+  shootDouble: false,
+  rapidFire: false,
+  shield: false,
 };
 
 let bullets = [];
 let enemies = [];
 let keys = {};
+
+// Variables pour le tir
+let lastShotTime = 0;
+const defaultShootCooldown = 200; // en millisecondes
+const rapidFireCooldown = 50;      // en millisecondes
 
 function spawnEnemy() {
   enemies.push({
@@ -37,38 +47,54 @@ function drawRect(obj) {
 }
 
 function update() {
+  // Effacer le canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Player move
-  if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
-  if (keys["ArrowRight"] && player.x < canvas.width - player.width)
+  // Déplacement du joueur
+  if (keys["ArrowLeft"] && player.x > 0) {
+    player.x -= player.speed;
+  }
+  if (keys["ArrowRight"] && player.x < canvas.width - player.width) {
     player.x += player.speed;
+  }
 
-  // Draw player
+  // Dessiner le joueur
   drawRect(player);
 
-  // Bullets
-  bullets.forEach((b, i) => {
-    b.y -= b.speed;
-    drawRect(b);
-    if (b.y < 0) bullets.splice(i, 1);
+  // Si le shield est actif, on dessine un halo autour du joueur
+  if (player.shield) {
+    ctx.strokeStyle = "cyan";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width, 0, 2 * Math.PI);
+    ctx.stroke();
+  }
+
+  // Mise à jour et affichage des balles
+  bullets.forEach((bullet, bulletIndex) => {
+    bullet.y -= bullet.speed;
+    drawRect(bullet);
+    if (bullet.y < 0) {
+      bullets.splice(bulletIndex, 1);
+    }
   });
 
-  // Enemies
-  enemies.forEach((e, ei) => {
-    e.y += e.speed;
-    drawRect(e);
+  // Mise à jour et affichage des ennemis
+  enemies.forEach((enemy, enemyIndex) => {
+    enemy.y += enemy.speed;
+    drawRect(enemy);
 
-    // Collision with bullets
-    bullets.forEach((b, bi) => {
+    // Vérification de la collision entre chaque ennemi et chacune des balles
+    bullets.forEach((bullet, bulletCollisionIndex) => {
       if (
-        b.x < e.x + e.width &&
-        b.x + b.width > e.x &&
-        b.y < e.y + e.height &&
-        b.y + b.height > e.y
+        bullet.x < enemy.x + enemy.width &&
+        bullet.x + bullet.width > enemy.x &&
+        bullet.y < enemy.y + enemy.height &&
+        bullet.y + bullet.height > enemy.y
       ) {
-        bullets.splice(bi, 1);
-        enemies.splice(ei, 1);
+        // Collision : suppression de la balle et de l'ennemi
+        bullets.splice(bulletCollisionIndex, 1);
+        enemies.splice(enemyIndex, 1);
         player.score += 100;
         player.points += 10;
         updateUI();
@@ -87,30 +113,58 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-// Key handling
+// Gestion des événements clavier, avec vérification du cooldown pour le tir
 window.addEventListener("keydown", (e) => {
   keys[e.key] = true;
   if (e.key === " " || e.code === "Space") {
-    bullets.push({
-      x: player.x + player.width / 2 - 2,
-      y: player.y,
-      width: 4,
-      height: 10,
-      color: "white",
-      speed: 7,
-    });
+    let currentTime = Date.now();
+    const shootCooldown = player.rapidFire ? rapidFireCooldown : defaultShootCooldown;
+    if (currentTime - lastShotTime >= shootCooldown) {
+      lastShotTime = currentTime;
+      // Si le power-up double_shot est actif, on tire deux balles
+      if (player.shootDouble) {
+        bullets.push({
+          x: player.x + player.width / 2 - 10,
+          y: player.y,
+          width: 4,
+          height: 10,
+          color: "white",
+          speed: 7,
+        });
+        bullets.push({
+          x: player.x + player.width / 2 + 6,
+          y: player.y,
+          width: 4,
+          height: 10,
+          color: "white",
+          speed: 7,
+        });
+      } else {
+        // Tir normal
+        bullets.push({
+          x: player.x + player.width / 2 - 2,
+          y: player.y,
+          width: 4,
+          height: 10,
+          color: "white",
+          speed: 7,
+        });
+      }
+    }
   }
 });
 
-window.addEventListener("keyup", (e) => (keys[e.key] = false));
+window.addEventListener("keyup", (e) => {
+  keys[e.key] = false;
+});
 
-// Lottery system 
+// Système de loterie pour obtenir des power-ups
 lotteryBtn.addEventListener("click", () => {
   if (player.points >= 100) {
     player.points -= 100;
     const reward = pickPowerUp();
     player.powerups.push(reward);
-    alert(`Tu as gagné: ${reward}`);
+    alert(`Tu as gagné : ${reward}`);
     applyPowerUp(reward);
     updateUI();
   } else {
@@ -120,8 +174,8 @@ lotteryBtn.addEventListener("click", () => {
 
 function pickPowerUp() {
   const lootTable = [
-    { name: "double_shot", weight: 3 },
-    { name: "shield", weight: 2 },
+    { name: "double_shot", weight: 2 },
+    { name: "shield", weight: 3 },
     { name: "speed_up", weight: 4 },
     { name: "rapid_fire", weight: 1 },
   ];
@@ -138,19 +192,32 @@ function applyPowerUp(power) {
   switch (power) {
     case "double_shot":
       player.shootDouble = true;
+      // Réinitialisation après 10 secondes
+      setTimeout(() => {
+        player.shootDouble = false;
+      }, 10000);
       break;
     case "speed_up":
-      player.speed += 1;
+      // Augmente la vitesse de façon plus marquée (ex. +3)
+      player.speed = player.baseSpeed + 3;
+      setTimeout(() => {
+        player.speed = player.baseSpeed;
+      }, 20000);
       break;
     case "shield":
+      // Le shield reste actif jusqu'à ce qu'une autre logique intervienne pour le désactiver
       player.shield = true;
       break;
     case "rapid_fire":
-      // Could implement faster shooting
+      player.rapidFire = true;
+      // Réinitialisation après 5 secondes
+      setTimeout(() => {
+        player.rapidFire = false;
+      }, 5000);
       break;
   }
 }
 
-// Start the game
-setInterval(spawnEnemy, 1500);
+// Démarrage du jeu
+setInterval(spawnEnemy, 400);
 loop();
