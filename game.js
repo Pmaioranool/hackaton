@@ -104,7 +104,7 @@ window.addEventListener("keydown", (e) => {
 
 window.addEventListener("keyup", (e) => (keys[e.key] = false));
 
-// Lottery system
+// Lottery system 
 lotteryBtn.addEventListener("click", () => {
   if (player.points >= 100) {
     player.points -= 100;
