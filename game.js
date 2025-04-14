@@ -2,6 +2,7 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 const pointsEl = document.getElementById("points");
+const healthEl = document.getElementById("health");
 const lotteryBtn = document.getElementById("lottery-btn");
 
 let player = {
@@ -11,11 +12,11 @@ let player = {
   height: 30,
   color: "lime",
   speed: 7,
-  baseSpeed: 7,  // Vitesse de base du joueur
+  baseSpeed: 7,
   points: 0,
   score: 0,
+  health: 3,
   powerups: [],
-  // Propriétés de power-ups
   shootDouble: false,
   rapidFire: false,
   shield: false,
@@ -25,10 +26,14 @@ let bullets = [];
 let enemies = [];
 let keys = {};
 
-// Variables pour le tir
 let lastShotTime = 0;
-const defaultShootCooldown = 200; // en millisecondes
-const rapidFireCooldown = 50;      // en millisecondes
+const defaultShootCooldown = 200;
+const rapidFireCooldown = 50;
+
+let spawnTimer = 0;
+let spawnInterval = 2000;
+let spawnAccelerationTimer = 0;
+const minSpawnInterval = 400;
 
 function spawnEnemy() {
   enemies.push({
@@ -47,10 +52,8 @@ function drawRect(obj) {
 }
 
 function update() {
-  // Effacer le canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Déplacement du joueur
   if (keys["ArrowLeft"] && player.x > 0) {
     player.x -= player.speed;
   }
@@ -58,19 +61,22 @@ function update() {
     player.x += player.speed;
   }
 
-  // Dessiner le joueur
   drawRect(player);
 
-  // Si le shield est actif, on dessine un halo autour du joueur
   if (player.shield) {
     ctx.strokeStyle = "cyan";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width, 0, 2 * Math.PI);
+    ctx.arc(
+      player.x + player.width / 2,
+      player.y + player.height / 2,
+      player.width,
+      0,
+      2 * Math.PI
+    );
     ctx.stroke();
   }
 
-  // Mise à jour et affichage des balles
   bullets.forEach((bullet, bulletIndex) => {
     bullet.y -= bullet.speed;
     drawRect(bullet);
@@ -79,12 +85,10 @@ function update() {
     }
   });
 
-  // Mise à jour et affichage des ennemis
   enemies.forEach((enemy, enemyIndex) => {
     enemy.y += enemy.speed;
     drawRect(enemy);
 
-    // Vérification de la collision entre chaque ennemi et chacune des balles
     bullets.forEach((bullet, bulletCollisionIndex) => {
       if (
         bullet.x < enemy.x + enemy.width &&
@@ -92,7 +96,6 @@ function update() {
         bullet.y < enemy.y + enemy.height &&
         bullet.y + bullet.height > enemy.y
       ) {
-        // Collision : suppression de la balle et de l'ennemi
         bullets.splice(bulletCollisionIndex, 1);
         enemies.splice(enemyIndex, 1);
         player.score += 100;
@@ -100,7 +103,48 @@ function update() {
         updateUI();
       }
     });
+
+    if (
+      player.x < enemy.x + enemy.width &&
+      player.x + player.width > enemy.x &&
+      player.y < enemy.y + enemy.height &&
+      player.y + player.height > enemy.y
+    ) {
+      if (!player.shield) {
+        player.health -= 1;
+        updateHealthUI();
+        enemies.splice(enemyIndex, 1);
+        if (player.health <= 0) {
+          alert("Game Over!");
+          player.health = 3;
+          player.score = 0;
+          player.points = 0;
+          updateUI();
+          updateHealthUI();
+          enemies = [];
+          bullets = [];
+        }
+      } else {
+        enemies.splice(enemyIndex, 1);
+      }
+    }
   });
+
+  // --- Gestion du spawn progressif ---
+  spawnTimer += 16;
+  spawnAccelerationTimer += 16;
+
+  if (spawnTimer >= spawnInterval) {
+    spawnEnemy();
+    spawnTimer = 0;
+  }
+
+  if (spawnAccelerationTimer >= 10000) {
+    if (spawnInterval > minSpawnInterval) {
+      spawnInterval -= 100;
+    }
+    spawnAccelerationTimer = 0;
+  }
 }
 
 function updateUI() {
@@ -108,20 +152,24 @@ function updateUI() {
   pointsEl.textContent = player.points;
 }
 
+function updateHealthUI() {
+  healthEl.textContent = `Vie: ${player.health}`;
+}
+
 function loop() {
   update();
   requestAnimationFrame(loop);
 }
 
-// Gestion des événements clavier, avec vérification du cooldown pour le tir
 window.addEventListener("keydown", (e) => {
   keys[e.key] = true;
   if (e.key === " " || e.code === "Space") {
     let currentTime = Date.now();
-    const shootCooldown = player.rapidFire ? rapidFireCooldown : defaultShootCooldown;
+    const shootCooldown = player.rapidFire
+      ? rapidFireCooldown
+      : defaultShootCooldown;
     if (currentTime - lastShotTime >= shootCooldown) {
       lastShotTime = currentTime;
-      // Si le power-up double_shot est actif, on tire deux balles
       if (player.shootDouble) {
         bullets.push({
           x: player.x + player.width / 2 - 10,
@@ -140,7 +188,6 @@ window.addEventListener("keydown", (e) => {
           speed: 7,
         });
       } else {
-        // Tir normal
         bullets.push({
           x: player.x + player.width / 2 - 2,
           y: player.y,
@@ -158,7 +205,6 @@ window.addEventListener("keyup", (e) => {
   keys[e.key] = false;
 });
 
-// Système de loterie pour obtenir des power-ups
 lotteryBtn.addEventListener("click", () => {
   if (player.points >= 100) {
     player.points -= 100;
@@ -192,25 +238,21 @@ function applyPowerUp(power) {
   switch (power) {
     case "double_shot":
       player.shootDouble = true;
-      // Réinitialisation après 10 secondes
       setTimeout(() => {
         player.shootDouble = false;
       }, 10000);
       break;
     case "speed_up":
-      // Augmente la vitesse de façon plus marquée (ex. +3)
       player.speed = player.baseSpeed + 3;
       setTimeout(() => {
         player.speed = player.baseSpeed;
       }, 20000);
       break;
     case "shield":
-      // Le shield reste actif jusqu'à ce qu'une autre logique intervienne pour le désactiver
       player.shield = true;
       break;
     case "rapid_fire":
       player.rapidFire = true;
-      // Réinitialisation après 5 secondes
       setTimeout(() => {
         player.rapidFire = false;
       }, 5000);
@@ -218,6 +260,6 @@ function applyPowerUp(power) {
   }
 }
 
-// Démarrage du jeu
-setInterval(spawnEnemy, 400);
+// Lancer la boucle
+updateHealthUI();
 loop();
