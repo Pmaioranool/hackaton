@@ -4,6 +4,8 @@ const scoreEl = document.getElementById("score");
 const pointsEl = document.getElementById("points");
 const healthEl = document.getElementById("health");
 const lotteryBtn = document.getElementById("lottery-btn");
+const shootSound = new Audio("shoot.mp3");
+shootSound.volume = 0.3;
 
 let player = {
   x: canvas.width / 2 - 15,
@@ -168,6 +170,8 @@ window.addEventListener("keydown", (e) => {
     const shootCooldown = player.rapidFire ? rapidFireCooldown : defaultShootCooldown;
     if (currentTime - lastShotTime >= shootCooldown) {
       lastShotTime = currentTime;
+      shootSound.currentTime = 0;
+      shootSound.play();
       if (player.shootDouble) {
         bullets.push({
           x: player.x + player.width / 2 - 10,
