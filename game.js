@@ -1,4 +1,4 @@
-// Ajout du type de jeu et gestion du canvas
+// === CANVAS & UI ===
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
@@ -8,6 +8,7 @@ const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
 shootSound.volume = 0.3;
 
+// === PLAYER SETUP ===
 let player = {
   x: canvas.width / 2 - 15,
   y: canvas.height - 50,
@@ -29,6 +30,8 @@ let player = {
 let bullets = [];
 let enemies = [];
 let enemyBullets = [];
+let boss = null;
+let bossLaser = null;
 let keys = {};
 
 let lastShotTime = 0;
@@ -39,7 +42,9 @@ let spawnTimer = 0;
 let spawnInterval = 2000;
 let spawnAccelerationTimer = 0;
 const minSpawnInterval = 400;
+let enemiesKilled = 0;
 
+// === SPAWN ENNEMIS ===
 function spawnEnemy() {
   const typeChance = Math.random();
   let type, hp, speed, width, height, color;
@@ -47,13 +52,13 @@ function spawnEnemy() {
   if (typeChance < 0.3) {
     type = "tank";
     hp = 5;
-    speed = 1.5; // 75% of 2
+    speed = 1.5;
     width = height = 40;
     color = "darkblue";
   } else if (typeChance < 0.6) {
     type = "kamikaze";
     hp = 1;
-    speed = 4; // 2x speed
+    speed = 4;
     width = height = 30;
     color = "orange";
   } else {
@@ -78,6 +83,7 @@ function spawnEnemy() {
   });
 }
 
+// === DESSIN ===
 function drawRect(obj) {
   ctx.fillStyle = obj.color;
   ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
@@ -96,6 +102,7 @@ function drawCircle(obj) {
   ctx.fill();
 }
 
+// === UPDATE PRINCIPAL ===
 function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -125,70 +132,176 @@ function update() {
     if (bullet.y < 0) bullets.splice(i, 1);
   });
 
-  // Boucles ennemis
-  enemies.forEach((enemy, ei) => {
-    enemy.y += enemy.speed;
+  // === ENNEMIS ===
+  if (!boss) {
+    enemies.forEach((enemy, ei) => {
+      enemy.y += enemy.speed;
 
-    if (enemy.type === "tank") {
-      drawCircle(enemy);
-    } else {
-      drawRect(enemy);
-    }
+      enemy.type === "tank" ? drawCircle(enemy) : drawRect(enemy);
 
-    // Gunner tire
-    if (enemy.type === "gunner") {
-      if (Date.now() - enemy.lastShootTime > enemy.shootCooldown) {
-        enemyBullets.push({
-          x: enemy.x + enemy.width / 2 - 2,
-          y: enemy.y + enemy.height,
-          width: 4,
-          height: 10,
-          speed: 4,
-          color: "red",
-        });
-        enemy.lastShootTime = Date.now();
+      if (enemy.type === "gunner") {
+        if (Date.now() - enemy.lastShootTime > enemy.shootCooldown) {
+          enemyBullets.push({
+            x: enemy.x + enemy.width / 2 - 2,
+            y: enemy.y + enemy.height,
+            width: 4,
+            height: 10,
+            speed: 4,
+            color: "red",
+          });
+          enemy.lastShootTime = Date.now();
+        }
       }
-    }
 
-    bullets.forEach((bullet, bi) => {
+      bullets.forEach((bullet, bi) => {
+        if (
+          bullet.x < enemy.x + enemy.width &&
+          bullet.x + bullet.width > enemy.x &&
+          bullet.y < enemy.y + enemy.height &&
+          bullet.y + bullet.height > enemy.y
+        ) {
+          bullets.splice(bi, 1);
+          enemy.hp--;
+          if (enemy.hp <= 0) {
+            enemies.splice(ei, 1);
+            player.score += 100;
+            player.points += 10;
+            enemiesKilled++;
+            updateUI();
+          }
+        }
+      });
+
+      // Collision joueur
       if (
-        bullet.x < enemy.x + enemy.width &&
-        bullet.x + bullet.width > enemy.x &&
-        bullet.y < enemy.y + enemy.height &&
-        bullet.y + bullet.height > enemy.y
+        player.x < enemy.x + enemy.width &&
+        player.x + player.width > enemy.x &&
+        player.y < enemy.y + enemy.height &&
+        player.y + player.height > enemy.y
       ) {
-        bullets.splice(bi, 1);
-        enemy.hp--;
-        if (enemy.hp <= 0) {
+        if (!player.shield) {
+          player.health--;
+          updateHealthUI();
           enemies.splice(ei, 1);
-          player.score += 100;
-          player.points += 10;
-          updateUI();
+          if (player.health <= 0) {
+            alert("Game Over!");
+            resetGame();
+          }
+        } else {
+          enemies.splice(ei, 1);
         }
       }
     });
 
-    if (
-      player.x < enemy.x + enemy.width &&
-      player.x + player.width > enemy.x &&
-      player.y < enemy.y + enemy.height &&
-      player.y + player.height > enemy.y
-    ) {
-      if (!player.shield) {
-        player.health -= 1;
-        updateHealthUI();
-        enemies.splice(ei, 1);
-        if (player.health <= 0) {
-          alert("Game Over!");
-          resetGame();
-        }
-      } else {
-        enemies.splice(ei, 1);
+    // === LANCEMENT DU BOSS ===
+    if (enemiesKilled >= 100) {
+      enemies = [];
+      boss = {
+        x: canvas.width / 2 - 100,
+        y: 20,
+        width: 200,
+        height: 60,
+        color: "crimson",
+        hp: 10,
+        direction: 1,
+        speed: 2,
+        lastTorpedoTime: 0,
+        lastLaserTime: 0,
+        laserCharging: false,
+        laserChargeStart: 0,
+      };
+    }
+  }
+
+  // === BOSS ===
+  if (boss) {
+    // Mouvement gauche-droite
+    boss.x += boss.speed * boss.direction;
+    if (boss.x <= 0 || boss.x + boss.width >= canvas.width)
+      boss.direction *= -1;
+
+    drawRect(boss);
+
+    // === Laser ===
+    if (!boss.laserCharging && Date.now() - boss.lastLaserTime > 10000) {
+      boss.laserCharging = true;
+      boss.laserChargeStart = Date.now();
+    }
+
+    if (boss.laserCharging) {
+      const chargeDuration = Date.now() - boss.laserChargeStart;
+
+      // Charge visuelle
+      ctx.fillStyle = "rgba(255,0,0,0.3)";
+      ctx.fillRect(
+        boss.x + boss.width / 2 - 10,
+        boss.y + boss.height,
+        20,
+        canvas.height
+      );
+
+      if (chargeDuration > 3000) {
+        // TIR DU LASER
+        bossLaser = {
+          x: boss.x + boss.width / 2 - 10,
+          width: 20,
+        };
+        boss.lastLaserTime = Date.now();
+        boss.laserCharging = false;
       }
     }
-  });
 
-  // Enemy bullets
+    // Affichage et collision laser
+    if (bossLaser) {
+      ctx.fillStyle = "red";
+      ctx.fillRect(bossLaser.x, 0, bossLaser.width, canvas.height);
+
+      if (
+        player.x < bossLaser.x + bossLaser.width &&
+        player.x + player.width > bossLaser.x
+      ) {
+        alert("Touché par le laser ! Game Over!");
+        resetGame();
+        bossLaser = null;
+        return;
+      }
+
+      // Laser reste 0.5s
+      if (Date.now() - boss.lastLaserTime > 500) bossLaser = null;
+    }
+
+    // Torpilles régulières
+    if (Date.now() - boss.lastTorpedoTime > 800) {
+      enemyBullets.push({
+        x: boss.x + boss.width / 2 - 3,
+        y: boss.y + boss.height,
+        width: 6,
+        height: 14,
+        speed: 4,
+        color: "orange",
+      });
+      boss.lastTorpedoTime = Date.now();
+    }
+
+    // Dégâts du joueur au boss
+    bullets.forEach((bullet, bi) => {
+      if (
+        bullet.x < boss.x + boss.width &&
+        bullet.x + bullet.width > boss.x &&
+        bullet.y < boss.y + boss.height &&
+        bullet.y + bullet.height > boss.y
+      ) {
+        bullets.splice(bi, 1);
+        boss.hp--;
+        if (boss.hp <= 0) {
+          alert("Boss vaincu ! GG !");
+          resetGame();
+        }
+      }
+    });
+  }
+
+  // === BULLETS ENNEMIES ===
   enemyBullets.forEach((b, bi) => {
     b.y += b.speed;
     drawRect(b);
@@ -199,7 +312,7 @@ function update() {
       b.y + b.height > player.y
     ) {
       if (!player.shield) {
-        player.health -= 1;
+        player.health--;
         updateHealthUI();
         if (player.health <= 0) {
           alert("Game Over!");
@@ -212,19 +325,18 @@ function update() {
     }
   });
 
-  spawnTimer += 16;
-  spawnAccelerationTimer += 16;
-
-  if (spawnTimer >= spawnInterval) {
-    spawnEnemy();
-    spawnTimer = 0;
-  }
-
-  if (spawnAccelerationTimer >= 10000) {
-    if (spawnInterval > minSpawnInterval) {
-      spawnInterval -= 100;
+  // === SPAWN ===
+  if (!boss) {
+    spawnTimer += 16;
+    spawnAccelerationTimer += 16;
+    if (spawnTimer >= spawnInterval) {
+      spawnEnemy();
+      spawnTimer = 0;
     }
-    spawnAccelerationTimer = 0;
+    if (spawnAccelerationTimer >= 10000) {
+      if (spawnInterval > minSpawnInterval) spawnInterval -= 100;
+      spawnAccelerationTimer = 0;
+    }
   }
 }
 
@@ -235,6 +347,9 @@ function resetGame() {
   bullets = [];
   enemies = [];
   enemyBullets = [];
+  boss = null;
+  bossLaser = null;
+  enemiesKilled = 0;
   updateUI();
   updateHealthUI();
 }
@@ -253,6 +368,7 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+// === CONTROLS ===
 window.addEventListener("keydown", (e) => {
   keys[e.key] = true;
   if (e.key === " " || e.code === "Space") {
@@ -350,7 +466,7 @@ function applyPowerUp(power) {
       break;
     case "heal":
       if (player.health < player.maxHealth) {
-        player.health += 1;
+        player.health++;
         updateHealthUI();
       } else {
         alert("Vie déjà au maximum !");
@@ -359,5 +475,6 @@ function applyPowerUp(power) {
   }
 }
 
+// === Démarre le jeu ===
 updateHealthUI();
 loop();
