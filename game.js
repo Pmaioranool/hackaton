@@ -11,11 +11,12 @@ let player = {
   width: 30,
   height: 30,
   color: "lime",
-  speed: 7,
+  speed: 5,
   baseSpeed: 7,
   points: 0,
   score: 0,
   health: 3,
+  maxHealth: 3, // 👈 vie maximale
   powerups: [],
   shootDouble: false,
   rapidFire: false,
@@ -116,7 +117,7 @@ function update() {
         enemies.splice(enemyIndex, 1);
         if (player.health <= 0) {
           alert("Game Over!");
-          player.health = 3;
+          player.health = player.maxHealth;
           player.score = 0;
           player.points = 0;
           updateUI();
@@ -130,7 +131,6 @@ function update() {
     }
   });
 
-  // --- Gestion du spawn progressif ---
   spawnTimer += 16;
   spawnAccelerationTimer += 16;
 
@@ -165,9 +165,7 @@ window.addEventListener("keydown", (e) => {
   keys[e.key] = true;
   if (e.key === " " || e.code === "Space") {
     let currentTime = Date.now();
-    const shootCooldown = player.rapidFire
-      ? rapidFireCooldown
-      : defaultShootCooldown;
+    const shootCooldown = player.rapidFire ? rapidFireCooldown : defaultShootCooldown;
     if (currentTime - lastShotTime >= shootCooldown) {
       lastShotTime = currentTime;
       if (player.shootDouble) {
@@ -224,6 +222,7 @@ function pickPowerUp() {
     { name: "shield", weight: 3 },
     { name: "speed_up", weight: 4 },
     { name: "rapid_fire", weight: 1 },
+    { name: "heal", weight: 0.5 }, // 👈 nouveau power-up
   ];
   const total = lootTable.reduce((sum, item) => sum + item.weight, 0);
   const roll = Math.random() * total;
@@ -257,9 +256,16 @@ function applyPowerUp(power) {
         player.rapidFire = false;
       }, 5000);
       break;
+    case "heal":
+      if (player.health < player.maxHealth) {
+        player.health += 1;
+        updateHealthUI();
+      } else {
+        alert("Vie déjà au maximum !");
+      }
+      break;
   }
 }
 
-// Lancer la boucle
 updateHealthUI();
 loop();
