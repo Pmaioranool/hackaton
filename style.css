@@ -57,3 +57,30 @@ button:hover {
   background: #00e6b8;
   transform: scale(1.05);
 }
+
+#message {
+  position: absolute;
+  top: 5%; /* Ajusté pour un meilleur placement */
+  left: 45%;
+  transform: translateX(-50%); /* Centrer horizontalement */
+
+  background-color: rgba(
+    10,
+    10,
+    35,
+    0.9
+  ); /* Ajout de transparence pour un effet moderne */
+  border: 2px solid #00ffcc;
+  border-radius: 15px; /* Coins légèrement plus arrondis */
+  padding: 1.5%; /* Plus d'espace pour le texte */
+  font-size: 1.8rem; /* Texte légèrement plus grand */
+  color: #00ffcc;
+  text-shadow: 0 0 15px #00ffcc, 0 0 30px #00ffcc; /* Effet de lueur renforcé */
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.5); /* Ajout d'une ombre lumineuse */
+  text-align: center; /* Centrer le texte */
+  z-index: 1000; /* Assurer que le message est au-dessus des autres éléments */
+}
+
+.hidden {
+  display: none;
+}

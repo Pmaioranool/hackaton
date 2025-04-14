@@ -8,6 +8,17 @@ const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
 shootSound.volume = 0.3;
 
+function message(text) {
+  const messageEl = document.getElementById("message");
+  messageEl.classList.remove("hidden");
+  messageEl.textContent = text;
+
+  setTimeout(() => {
+    messageEl.textContent = "";
+    messageEl.classList.add("hidden");
+  }, 2000);
+}
+
 let win = false;
 
 // === PLAYER SETUP ===
@@ -188,7 +199,7 @@ function update() {
           player.health--;
           updateHealthUI();
           if (player.health <= 0) {
-            alert("Game Over!");
+            message("Game Over!");
             resetGame();
           }
         }
@@ -263,7 +274,7 @@ function update() {
         player.x < bossLaser.x + bossLaser.width &&
         player.x + player.width > bossLaser.x
       ) {
-        alert("Touché par le laser ! Game Over!");
+        message("Touché par le laser ! Game Over!");
         resetGame();
         bossLaser = null;
         return;
@@ -297,7 +308,7 @@ function update() {
         bullets.splice(bi, 1);
         boss.hp--;
         if (boss.hp <= 0) {
-          alert("Boss vaincu ! GG !");
+          message("Boss vaincu ! GG !");
           player.score += 1000;
           win = true;
           resetGame();
@@ -322,7 +333,7 @@ function update() {
         player.health--;
         updateHealthUI();
         if (player.health <= 0) {
-          alert("Game Over!");
+          message("Game Over!");
           resetGame();
         }
       }
@@ -427,62 +438,75 @@ function loop() {
 // === CONTROLS ===
 window.addEventListener("keydown", (e) => {
   keys[e.key] = true;
-  if (e.key === " " || e.code === "Space") {
-    const now = Date.now();
-    const shootCooldown = player.rapidFire
-      ? rapidFireCooldown
-      : defaultShootCooldown;
-    if (now - lastShotTime >= shootCooldown) {
-      lastShotTime = now;
-      shootSound.currentTime = 0;
-      shootSound.play();
-      if (player.shootDouble) {
-        bullets.push(
-          {
-            x: player.x + player.width / 2 - 10,
-            y: player.y,
-            width: 4,
-            height: 10,
-            color: "white",
-            speed: 7,
-          },
-          {
-            x: player.x + player.width / 2 + 6,
-            y: player.y,
-            width: 4,
-            height: 10,
-            color: "white",
-            speed: 7,
-          }
-        );
-      } else {
-        bullets.push({
-          x: player.x + player.width / 2 - 2,
-          y: player.y,
-          width: 4,
-          height: 10,
-          color: "white",
-          speed: 7,
-        });
-      }
-    }
-  }
+  // shoot with space
+  // if (e.key === " " || e.code === "Space") {
+  //   // const now = Date.now();
+  //   // const shootCooldown = player.rapidFire
+  //   //   ? rapidFireCooldown
+  //   //   : defaultShootCooldown;
+  //   // if (now - lastShotTime >= shootCooldown) {
+  //   //   lastShotTime = now;
+  //   //   shootSound.currentTime = 0;
+  //   //   shootSound.play();
+  //   //   if (player.shootDouble) {
+  //   //     bullets.push(
+  //   //       {
+  //   //         x: player.x + player.width / 2 - 10,
+  //   //         y: player.y,
+  //   //         width: 4,
+  //   //         height: 10,
+  //   //         color: "white",
+  //   //         speed: 7,
+  //   //       },
+  //   //       {
+  //   //         x: player.x + player.width / 2 + 6,
+  //   //         y: player.y,
+  //   //         width: 4,
+  //   //         height: 10,
+  //   //         color: "white",
+  //   //         speed: 7,
+  //   //       }
+  //   //     );
+  //   //   } else {
+  //   //     bullets.push({
+  //   //       x: player.x + player.width / 2 - 2,
+  //   //       y: player.y,
+  //   //       width: 4,
+  //   //       height: 10,
+  //   //       color: "white",
+  //   //       speed: 7,
+  //   //     });
+  //   //   }
+  //   // }
+  // }
 });
 
 window.addEventListener("keyup", (e) => {
   keys[e.key] = false;
 });
 
-lotteryBtn.addEventListener("click", () => {
+// === LOTTERY ===
+const lotteryRoll = () => {
   if (player.points >= 100) {
     player.points -= 100;
     const reward = pickPowerUp();
     player.powerups.push(reward);
-    alert(`Tu as gagné : ${reward}`);
+    message(`Tu as gagné : ${reward}`);
     applyPowerUp(reward);
     updateUI();
   } else {
-    alert("Pas assez de points !");
+    message("Pas assez de points !");
+  }
+};
+
+lotteryBtn.addEventListener("click", () => {
+  lotteryRoll();
+});
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "l") {
+    e.preventDefault(); // Empêche le comportement par défaut de la touche "L"
+    lotteryRoll();
   }
 });
 
@@ -525,7 +549,7 @@ function applyPowerUp(power) {
         player.health++;
         updateHealthUI();
       } else {
-        alert("Vie déjà au maximum !");
+        message("Vie déjà au maximum !");
       }
       break;
   }
