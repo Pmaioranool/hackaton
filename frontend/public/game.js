@@ -758,7 +758,7 @@ function applyPowerUp(power) {
       break;
     case "damage_bonus": // Applique un multiplicateur de dégâts x2 pendant 10 sec.
       player.damage = player.damage * 2;
-      setTimeout(() => (player.damageMultiplier = 1), 10000);
+      setTimeout(() => (player.damage = 1), 10000);
       break;
     case "score_x2": // Applique un multiplicateur de score x2 pendant 10 sec.
       player.scoreMultiplier = player.scoreMultiplier * 2;

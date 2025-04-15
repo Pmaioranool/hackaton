@@ -26,3 +26,8 @@ npm i
 npm run dev
 ```
 
+```
+MONGO_URI=mongodb://127.0.0.1:27017/space_invaders
+PORT=5000
+JWT_SECRET=secret
+```
