@@ -39,6 +39,8 @@ let player = {
   shootDouble: false,
   rapidFire: false,
   shield: false,
+  damageMultiplier: 1, // Ajout du multiplicateur de dégâts (1 = normal, 2 = x2 damage)
+  scoreMultiplier: 1,  // Ajout du multiplicateur de score (1 = normal, 2 = x2 score)
 };
 
 let bullets = [];
@@ -270,10 +272,10 @@ function update() {
           bullet.y + bullet.height > enemy.y
         ) {
           bullets.splice(bi, 1);
-          enemy.hp--;
+          enemy.hp -= player.damageMultiplier; // Utilisation du multiplicateur de dégâts
           if (enemy.hp <= 0) {
             enemies.splice(ei, 1);
-            player.score += 100;
+            player.score += 100 * player.scoreMultiplier; // Application du multiplicateur de score
             player.points += 10;
             enemiesKilled++;
             updateUI();
@@ -366,10 +368,10 @@ function update() {
           bullet.y + bullet.height > turret.y
         ) {
           bullets.splice(bi, 1);
-          turret.hp--;
+          turret.hp -= player.damageMultiplier; // Utilisation du multiplicateur de dégâts pour les tourelles
           if (turret.hp <= 0) {
             turrets.splice(ti, 1);
-            player.score += 150;
+            player.score += 150 * player.scoreMultiplier; // Multiplicateur de score appliqué
             updateUI();
           }
         }
@@ -454,10 +456,10 @@ function update() {
         bullet.y + bullet.height > boss.y
       ) {
         bullets.splice(bi, 1);
-        boss.hp--;
+        boss.hp -= player.damageMultiplier; // Multiplicateur de dégâts appliqué au boss
         if (boss.hp <= 0) {
           message("Boss vaincu ! GG !");
-          player.score += 1000;
+          player.score += 1000 * player.scoreMultiplier; // Multiplicateur de score appliqué
           win = true;
           resetGame();
         }
@@ -523,6 +525,9 @@ function resetGame() {
   player.rapidFire = false;
   player.shield = false;
   player.speed = player.baseSpeed;
+  // Réinitialisation des multiplicateurs
+  player.damageMultiplier = 1;
+  player.scoreMultiplier = 1;
   boss = null;
   bossLaser = null;
   enemiesKilled = 0;
@@ -668,6 +673,8 @@ function pickPowerUp() {
     { name: "speed_up", weight: 4 },
     { name: "rapid_fire", weight: 1 },
     { name: "heal", weight: 0.5 },
+    { name: "damage_bonus", weight: 1 }, // Nouveau power-up: x2 damage
+    { name: "score_x2", weight: 1 },     // Nouveau power-up: x2 score
   ];
   const total = lootTable.reduce((sum, item) => sum + item.weight, 0);
   const roll = Math.random() * total;
@@ -702,6 +709,14 @@ function applyPowerUp(power) {
       } else {
         message("Vie déjà au maximum !");
       }
+      break;
+    case "damage_bonus":  // Applique un multiplicateur de dégâts x2 pendant 10 sec.
+      player.damageMultiplier = 2;
+      setTimeout(() => (player.damageMultiplier = 1), 10000);
+      break;
+    case "score_x2":      // Applique un multiplicateur de score x2 pendant 10 sec.
+      player.scoreMultiplier = 2;
+      setTimeout(() => (player.scoreMultiplier = 1), 10000);
       break;
   }
 }
