@@ -1,11 +1,10 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import AuthContext from "../context/AuthContext";
 
 export default function Home() {
-  const { token } = useContext(AuthContext); // Vérifier si l'utilisateur est connecté
+  const { token } = useContext(AuthContext); // Vérifie si l'utilisateur est connecté
   const router = useRouter();
-  const [books, setBooks] = useState([]);
 
   // Redirige vers /login si l'utilisateur n'est pas connecté
   useEffect(() => {
@@ -14,39 +13,42 @@ export default function Home() {
     }
   }, [token]);
 
-  if (!token) return <p>Redirection en cours...</p>; // Affiche un message pendant la redirection
-
+  // Charge le script du jeu après le rendu de la page
   useEffect(() => {
-    // Charge le script du jeu après le rendu de la page
+    if (!token) return; // Ne charge pas le script si l'utilisateur n'est pas connecté
+
     const script = document.createElement("script");
-    script.src = "/game.js";
+    script.src = "/game/main.js";
     script.async = true;
+    script.type = "module";
     document.body.appendChild(script);
 
     return () => {
       // Nettoie le script lors du démontage du composant
       document.body.removeChild(script);
     };
-  }, []);
+  }, [token]);
+
+  // Affiche un message pendant la redirection
+  if (!token) {
+    return <p>Redirection en cours...</p>;
+  }
 
   return (
     <div>
       <link rel="stylesheet" href="/style.css" />
       <span id="message" className="hidden"></span>
-      <div>
-        {token ? (
-          <>
+      <nav>
+        <ul>
+          <li>
             <a href="/logout">Logout</a>
+          </li>
+          <li>
             <a href="/account">Account</a>
-          </>
-        ) : (
-          <>
-            <a href="/register">Register</a>
-            <a href="/login">Login</a>
-          </>
-        )}
-      </div>
-      <div id="container">
+          </li>
+        </ul>
+      </nav>
+      <main id="container">
         <canvas id="game" width="800" height="600"></canvas>
         <div id="ui">
           <div>
@@ -58,7 +60,7 @@ export default function Home() {
           </div>
           <button id="lottery-btn">🎰 Loterie (100 pts)</button>
         </div>
-      </div>
+      </main>
       <div id="boss-banner" className="hidden">
         ⚠️ Boss Approaching ⚠️
       </div>
