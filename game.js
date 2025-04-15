@@ -155,6 +155,14 @@ function applyScreenShake() {
     shakeDuration--;
   }
 }
+function showBossBanner() {
+  const banner = document.getElementById("boss-banner");
+  banner.classList.remove("hidden");
+
+  setTimeout(() => {
+    banner.classList.add("hidden");
+  }, 3000); // 3 secondes d'affichage
+}
 
 // === UPDATE PRINCIPAL ===
 function update() {
@@ -252,6 +260,7 @@ function update() {
 
     // === LANCEMENT DU BOSS ===
     if (enemiesKilled >= 1) {
+      showBossBanner();
       enemies = [];
       boss = {
         x: canvas.width / 2 - 100,

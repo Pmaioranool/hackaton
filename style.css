@@ -57,6 +57,21 @@ button:hover {
   background: #00e6b8;
   transform: scale(1.05);
 }
+#boss-banner {
+  position: absolute;
+  top: 30%;
+  width: 100%;
+  text-align: center;
+  font-size: 2rem;
+  color: crimson;
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px 0;
+  z-index: 100;
+}
+.hidden {
+  display: none;
+}
 
 #message {
   position: absolute;
