@@ -14,49 +14,54 @@ export default function Home() {
     }
   }, [token]);
 
-  useEffect(() => {
-    if (token) {
-      fetch("http://localhost:3001/books", {
-        headers: { Authorization: `Bearer ${token}` }, // Envoi du token JWT
-      })
-        .then((res) => res.json())
-        .then((data) => setBooks(data))
-        .catch((err) => console.error("Erreur lors du chargement :", err));
-    }
-  }, [token]);
-
   if (!token) return <p>Redirection en cours...</p>; // Affiche un message pendant la redirection
+
+  useEffect(() => {
+    // Charge le script du jeu après le rendu de la page
+    const script = document.createElement("script");
+    script.src = "/game.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      // Nettoie le script lors du démontage du composant
+      document.body.removeChild(script);
+    };
+  }, []);
 
   return (
     <div>
-      <h1>Liste des Livres</h1>
-      <a href="/add" style={{ display: "block", marginBottom: "20px" }}>Ajouter un Livre</a>
-      <button onClick={() => {
-        localStorage.removeItem("token"); // Supprime le token
-        window.location.reload(); // Recharge la page pour forcer la déconnexion
-      }}>Se Déconnecter</button>
-      <ul>
-        {books.length === 0 ? (
-          <p>Aucun livre disponible.</p>
+      <link rel="stylesheet" href="/style.css" />
+      <span id="message" className="hidden"></span>
+      <div>
+        {token ? (
+          <>
+            <a href="/logout">Logout</a>
+            <a href="/account">Account</a>
+          </>
         ) : (
-          books.map((book) => (
-            <li key={book.id}>
-              <a href={`/book/${book.id}`} style={{ marginRight: "10px" }}>
-                {book.title} - {book.author} ({book.year})
-              </a>
-              <button onClick={async () => {
-                await fetch(`http://localhost:3001/books/${book.id}`, {
-                  method: "DELETE",
-                  headers: { Authorization: `Bearer ${token}` }, // Envoi du token JWT
-                });
-                setBooks(books.filter((b) => b.id !== book.id));
-              }}>
-                Supprimer
-              </button>
-            </li>
-          ))
+          <>
+            <a href="/register">Register</a>
+            <a href="/login">Login</a>
+          </>
         )}
-      </ul>
+      </div>
+      <div id="container">
+        <canvas id="game" width="800" height="600"></canvas>
+        <div id="ui">
+          <div>
+            Score: <span id="score">0</span>
+          </div>
+          <p id="health">Vie: 3</p>
+          <div>
+            Points: <span id="points">0</span>
+          </div>
+          <button id="lottery-btn">🎰 Loterie (100 pts)</button>
+        </div>
+      </div>
+      <div id="boss-banner" className="hidden">
+        ⚠️ Boss Approaching ⚠️
+      </div>
     </div>
   );
 }
