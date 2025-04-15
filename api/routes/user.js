@@ -3,6 +3,7 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const router = express.Router();
 const User = require("../models/user");
+const jwt = require("jsonwebtoken");
 
 // GET all users (leaderboard)
 router.get("/", async (req, res) => {
@@ -15,9 +16,17 @@ router.post("/register", async (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10); // password hashing
   try {
+    const alrUser = User.findOne({ username });
+    if (alrUser) {
+      return res.status(400).json({ error: "Username already exists" });
+    }
     const newUser = new User({ username, password: hashedPassword });
     await newUser.save();
-    res.json(newUser);
+
+    const token = jwt.sign({ id: logUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    res.json(token);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -34,7 +43,13 @@ router.post("/login", async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid username or password" });
     }
-    res.json({ message: "Login successful", user: logUser });
+
+    // Generate a token (optional, for authentication)
+    const token = jwt.sign({ id: logUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.json({ message: "Login successful", token: token });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

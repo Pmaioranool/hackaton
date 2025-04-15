@@ -10,7 +10,7 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:3001/login", {
+    const response = await fetch("http://localhost:5000/api/users/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -29,8 +29,18 @@ export default function Login() {
       <a href="/register">Créer un compte</a>
       <br />
       <br />
-      <input type="text" placeholder="Nom" value={username} onChange={(e) => setUsername(e.target.value)} />
-      <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <input
+        type="text"
+        placeholder="Nom"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Mot de passe"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
       <button type="submit">Se connecter</button>
     </form>
   );
