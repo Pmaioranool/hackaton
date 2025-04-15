@@ -7,12 +7,20 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div id="ui">
-      <div>Score: <span id="score">0</span></div>
-      <div>Points: <span id="points">0</span></div>
-      <button id="lottery-btn">🎰 Loterie (100 pts)</button>
+    <span id="message" class="hidden"></span>
+    <div id="container">
+      <canvas id="game" width="800" height="600"></canvas>
+
+      <div id="ui">
+        <div>Score: <span id="score">0</span></div>
+        <p id="health">Vie: 3</p>
+        <div>Points: <span id="points">0</span></div>
+        <button id="lottery-btn">🎰 Loterie (100 pts)</button>
+      </div>
     </div>
-    <canvas id="game" width="800" height="600"></canvas>
+    <div id="boss-banner" class="hidden">⚠️ Boss Approaching ⚠️</div>
+
     <script src="game.js"></script>
+    
   </body>
 </html>
