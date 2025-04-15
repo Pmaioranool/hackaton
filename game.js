@@ -45,6 +45,9 @@ let enemies = [];
 let enemyBullets = [];
 let boss = null;
 let bossLaser = null;
+let shakeDuration = 0;
+let shakeIntensity = 8;
+
 let keys = {};
 
 let lastShotTime = 0;
@@ -115,9 +118,20 @@ function drawCircle(obj) {
   ctx.fill();
 }
 
+function applyScreenShake() {
+  if (shakeDuration > 0) {
+    const dx = (Math.random() - 0.5) * shakeIntensity;
+    const dy = (Math.random() - 0.5) * shakeIntensity;
+    ctx.translate(dx, dy);
+    shakeDuration--;
+  }
+}
+
 // === UPDATE PRINCIPAL ===
 function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  applyScreenShake();
 
   if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
   if (keys["ArrowRight"] && player.x < canvas.width - player.width)
@@ -240,6 +254,7 @@ function update() {
     if (!boss.laserCharging && Date.now() - boss.lastLaserTime > 10000) {
       boss.laserCharging = true;
       boss.laserChargeStart = Date.now();
+      shakeDuration = 15; // ← secoue l’écran quand le laser commence à charger
     }
 
     if (boss.laserCharging) {
@@ -356,6 +371,7 @@ function update() {
       spawnAccelerationTimer = 0;
     }
   }
+  ctx.restore();
 }
 
 function resetGame() {
