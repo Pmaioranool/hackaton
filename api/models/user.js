@@ -1,31 +1,12 @@
-const { Pool } = require("pg");
-const bcrypt = require("bcrypt");
+// server/models/User.js
+const mongoose = require("mongoose");
 
-require("dotenv").config();
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  score: { type: Number, default: 0 },
+  points: { type: Number, default: 0 },
+  inventory: [{ type: String }],
 });
 
-class User {
-  static async createUser({ username, password }) {
-    const hashedPassword = await bcrypt.hash(password, 10); 
-    const result = await pool.query(
-      "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *",
-      [username, hashedPassword]
-    );
-    return result.rows[0];
-  }
-
-  static async getUserByUsername(username) {
-    const result = await pool.query("SELECT * FROM users WHERE username = $1", [
-      username,
-    ]);
-    return result.rows[0];
-  }
-}
-
-module.exports = User;
+module.exports = mongoose.model("User", UserSchema);
