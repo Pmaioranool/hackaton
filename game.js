@@ -6,6 +6,7 @@ const pointsEl = document.getElementById("points");
 const healthEl = document.getElementById("health");
 const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
+
 shootSound.volume = 0.3;
 
 function message(text) {
@@ -47,6 +48,8 @@ let boss = null;
 let bossLaser = null;
 let shakeDuration = 0;
 let shakeIntensity = 8;
+let turrets = [];
+let lastTurretSpawnTime = 0;
 
 let keys = {};
 
@@ -97,6 +100,32 @@ function spawnEnemy() {
     shootCooldown: Math.random() * 1000 + 1000, // 1s à 3s,
     lastShootTime: Date.now(),
   });
+}
+
+function spawnTurrets() {
+  const turretLeft = {
+    x: boss.x + 10,
+    y: boss.y + boss.height,
+    width: 20,
+    height: 20,
+    color: "darkred",
+    hp: 1,
+    lastShootTime: 0,
+    shootCooldown: 1000,
+  };
+
+  const turretRight = {
+    x: boss.x + boss.width - 30,
+    y: boss.y + boss.height,
+    width: 20,
+    height: 20,
+    color: "darkred",
+    hp: 1,
+    lastShootTime: 0,
+    shootCooldown: 1000,
+  };
+
+  turrets.push(turretLeft, turretRight);
 }
 
 // === DESSIN ===
@@ -243,6 +272,57 @@ function update() {
 
   // === BOSS ===
   if (boss) {
+    // Apparition des tourelles toutes les 30s
+    if (Date.now() - lastTurretSpawnTime > 30000) {
+      spawnTurrets();
+      lastTurretSpawnTime = Date.now();
+    }
+    // === TOURELLES ===
+    turrets.forEach((turret, ti) => {
+      // Tir vers le joueur
+      const now = Date.now();
+      if (now - turret.lastShootTime > turret.shootCooldown) {
+        // Calcul direction vers le joueur
+        const dx = player.x + player.width / 2 - (turret.x + turret.width / 2);
+        const dy =
+          player.y + player.height / 2 - (turret.y + turret.height / 2);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const speed = 3;
+
+        enemyBullets.push({
+          x: turret.x + turret.width / 2 - 2,
+          y: turret.y + turret.height / 2 - 2,
+          width: 4,
+          height: 4,
+          color: "yellow",
+          speedX: (dx / dist) * speed,
+          speedY: (dy / dist) * speed,
+        });
+
+        turret.lastShootTime = now;
+      }
+
+      drawRect(turret);
+
+      // Collision avec les tirs du joueur
+      bullets.forEach((bullet, bi) => {
+        if (
+          bullet.x < turret.x + turret.width &&
+          bullet.x + bullet.width > turret.x &&
+          bullet.y < turret.y + turret.height &&
+          bullet.y + bullet.height > turret.y
+        ) {
+          bullets.splice(bi, 1);
+          turret.hp--;
+          if (turret.hp <= 0) {
+            turrets.splice(ti, 1);
+            player.score += 150;
+            updateUI();
+          }
+        }
+      });
+    });
+
     // Mouvement gauche-droite
     boss.x += boss.speed * boss.direction;
     if (boss.x <= 0 || boss.x + boss.width >= canvas.width)
@@ -334,7 +414,9 @@ function update() {
 
   // === BULLETS ENNEMIES ===
   enemyBullets.forEach((b, bi) => {
-    b.y += b.speed;
+    b.x += b.speedX || 0;
+    b.y += b.speedY || b.speed;
+
     drawRect(b);
     if (
       b.x < player.x + player.width &&
