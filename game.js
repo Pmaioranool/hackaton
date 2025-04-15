@@ -202,7 +202,7 @@ function update() {
         width: 200,
         height: 60,
         color: "crimson",
-        hp: 10,
+        hp: 200,
         direction: 1,
         speed: 2,
         lastTorpedoTime: 0,
