@@ -39,6 +39,8 @@ let player = {
   shootDouble: false,
   rapidFire: false,
   shield: false,
+  damageMultiplier: 1, // Ajout du multiplicateur de dégâts (1 = normal, 2 = x2 damage)
+  scoreMultiplier: 1,  // Ajout du multiplicateur de score (1 = normal, 2 = x2 score)
 };
 
 let bullets = [];
@@ -88,7 +90,11 @@ function spawnEnemy() {
     color = "purple";
   }
 
-  enemies.push({
+  // Ajout des patterns de mouvement pour les ennemis
+  const patterns = ['straight', 'diagonal', 'circular', 'zigzag'];
+  const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+
+  const enemy = {
     x: Math.random() * (canvas.width - width),
     y: -height,
     width,
@@ -99,7 +105,22 @@ function spawnEnemy() {
     hp,
     shootCooldown: Math.random() * 1000 + 1000, // 1s à 3s,
     lastShootTime: Date.now(),
-  });
+    pattern, // le pattern de mouvement attribué
+  };
+
+  // Propriétés spécifiques selon le pattern attribué
+  if (pattern === 'diagonal') {
+    enemy.dx = (Math.random() < 0.5 ? -1 : 1) * speed;
+  } else if (pattern === 'circular') {
+    enemy.angle = 0;
+    enemy.amplitude = 20;
+    enemy.initX = enemy.x;
+  } else if (pattern === 'zigzag') {
+    enemy.dx = (Math.random() < 0.5 ? -1 : 1) * speed;
+  }
+  // Le pattern 'straight' n'a pas de propriété supplémentaire
+
+  enemies.push(enemy);
 }
 
 function spawnTurrets() {
@@ -199,7 +220,33 @@ function update() {
   // === ENNEMIS ===
   if (!boss) {
     enemies.forEach((enemy, ei) => {
-      enemy.y += enemy.speed;
+      // Mise à jour du mouvement en fonction du pattern attribué
+      switch (enemy.pattern) {
+        case 'straight':
+          enemy.y += enemy.speed;
+          break;
+        case 'diagonal':
+          enemy.x += enemy.dx;
+          enemy.y += enemy.speed;
+          if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+            enemy.dx *= -1;
+          }
+          break;
+        case 'circular':
+          enemy.y += enemy.speed;
+          enemy.angle += 0.1;
+          enemy.x = enemy.initX + enemy.amplitude * Math.cos(enemy.angle);
+          break;
+        case 'zigzag':
+          enemy.x += enemy.dx;
+          if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+            enemy.y += enemy.height; // Descend d'un cran à chaque rebond
+            enemy.dx *= -1;
+          }
+          break;
+        default:
+          enemy.y += enemy.speed;
+      }
 
       enemy.type === "tank" ? drawCircle(enemy) : drawRect(enemy);
 
@@ -213,7 +260,6 @@ function update() {
             speed: 4,
             color: "red",
           });
-
           enemy.lastShootTime = Date.now();
         }
       }
@@ -226,10 +272,10 @@ function update() {
           bullet.y + bullet.height > enemy.y
         ) {
           bullets.splice(bi, 1);
-          enemy.hp--;
+          enemy.hp -= player.damageMultiplier; // Utilisation du multiplicateur de dégâts
           if (enemy.hp <= 0) {
             enemies.splice(ei, 1);
-            player.score += 100;
+            player.score += 100 * player.scoreMultiplier; // Application du multiplicateur de score
             player.points += 10;
             enemiesKilled++;
             updateUI();
@@ -237,7 +283,7 @@ function update() {
         }
       });
 
-      // Collision joueur
+      // Collision avec le joueur
       if (
         player.x < enemy.x + enemy.width &&
         player.x + player.width > enemy.x &&
@@ -322,10 +368,10 @@ function update() {
           bullet.y + bullet.height > turret.y
         ) {
           bullets.splice(bi, 1);
-          turret.hp--;
+          turret.hp -= player.damageMultiplier; // Utilisation du multiplicateur de dégâts pour les tourelles
           if (turret.hp <= 0) {
             turrets.splice(ti, 1);
-            player.score += 150;
+            player.score += 150 * player.scoreMultiplier; // Multiplicateur de score appliqué
             updateUI();
           }
         }
@@ -343,13 +389,13 @@ function update() {
     if (!boss.laserCharging && Date.now() - boss.lastLaserTime > 10000) {
       boss.laserCharging = true;
       boss.laserChargeStart = Date.now();
-      shakeDuration = 15; // ← secoue l’écran quand le laser commence à charger
+      shakeDuration = 15; // secoue l’écran lors du chargement du laser
     }
 
     if (boss.laserCharging) {
       const chargeDuration = Date.now() - boss.laserChargeStart;
 
-      // Charge visuelle
+      // Indicateur visuel de charge
       ctx.fillStyle = "rgba(255,0,0,0.3)";
       ctx.fillRect(
         boss.x + boss.width / 2 - 10,
@@ -369,7 +415,7 @@ function update() {
       }
     }
 
-    // Affichage et collision laser
+    // Affichage et collision du laser
     if (bossLaser) {
       ctx.fillStyle = "red";
       ctx.fillRect(bossLaser.x, 0, bossLaser.width, canvas.height);
@@ -384,7 +430,7 @@ function update() {
         return;
       }
 
-      // Laser reste 0.5s
+      // Le laser reste affiché 0.5s
       if (Date.now() - boss.lastLaserTime > 500) bossLaser = null;
     }
 
@@ -410,10 +456,10 @@ function update() {
         bullet.y + bullet.height > boss.y
       ) {
         bullets.splice(bi, 1);
-        boss.hp--;
+        boss.hp -= player.damageMultiplier; // Multiplicateur de dégâts appliqué au boss
         if (boss.hp <= 0) {
           message("Boss vaincu ! GG !");
-          player.score += 1000;
+          player.score += 1000 * player.scoreMultiplier; // Multiplicateur de score appliqué
           win = true;
           resetGame();
         }
@@ -479,6 +525,9 @@ function resetGame() {
   player.rapidFire = false;
   player.shield = false;
   player.speed = player.baseSpeed;
+  // Réinitialisation des multiplicateurs
+  player.damageMultiplier = 1;
+  player.scoreMultiplier = 1;
   boss = null;
   bossLaser = null;
   enemiesKilled = 0;
@@ -624,6 +673,8 @@ function pickPowerUp() {
     { name: "speed_up", weight: 4 },
     { name: "rapid_fire", weight: 1 },
     { name: "heal", weight: 0.5 },
+    { name: "damage_bonus", weight: 1 }, // Nouveau power-up: x2 damage
+    { name: "score_x2", weight: 1 },     // Nouveau power-up: x2 score
   ];
   const total = lootTable.reduce((sum, item) => sum + item.weight, 0);
   const roll = Math.random() * total;
@@ -658,6 +709,14 @@ function applyPowerUp(power) {
       } else {
         message("Vie déjà au maximum !");
       }
+      break;
+    case "damage_bonus":  // Applique un multiplicateur de dégâts x2 pendant 10 sec.
+      player.damageMultiplier = 2;
+      setTimeout(() => (player.damageMultiplier = 1), 10000);
+      break;
+    case "score_x2":      // Applique un multiplicateur de score x2 pendant 10 sec.
+      player.scoreMultiplier = 2;
+      setTimeout(() => (player.scoreMultiplier = 1), 10000);
       break;
   }
 }
