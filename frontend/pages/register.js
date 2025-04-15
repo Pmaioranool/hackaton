@@ -6,20 +6,33 @@ export default function Register() {
   const { login } = useContext(AuthContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const router = useRouter();
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:5000/api/users/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    setLoading(true);
+    setError(null);
 
-    if (response.ok) {
+    try {
+      const response = await fetch("http://localhost:5000/api/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
       const data = await response.json();
-      login(data.token);
-      router.push("/");
+
+      console.log(data);
+      if (response.ok) {
+        login(data.token);
+        router.push("/");
+      }
+    } catch (err) {
+      setError("Impossible de se connecter au serveur. Veuillez réessayer.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,23 +41,27 @@ export default function Register() {
       <h1>Créer un compte</h1>
       <input
         type="text"
-        placeholder="Nom"
+        placeholder="Nom d'utilisateur"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
+        required
       />
       <input
         type="password"
         placeholder="Mot de passe"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        required
       />
-      {data.message ? (
-        <p>{data.message}</p>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {loading ? (
+        <p>Inscription en cours...</p>
       ) : (
         <p>Veuillez entrer vos informations pour vous inscrire.</p>
       )}
-      {data.error && <p style={{ color: "red" }}>{data.error}</p>}
-      <button type="submit">S'inscrire</button>
+      <button type="submit" disabled={loading}>
+        {loading ? "Chargement..." : "S'inscrire"}
+      </button>
     </form>
   );
 }

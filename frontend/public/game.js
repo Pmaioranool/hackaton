@@ -20,7 +20,18 @@ function message(text) {
   }, 2000);
 }
 
+// variable correctif
+let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
+let enemiesToKill = 100;
+let laserCharge = 3000;
+let LaserCooldown = 2000; // 2 secondes entre chaque tir de laser
+let spawnTimer = 0;
+let spawnInterval = 2000;
+let spawnAccelerationTimer = 0;
+const minSpawnInterval = 400;
+
 let win = false;
+let bossBeaten = 10; // Nombre de boss battus
 
 // === PLAYER SETUP ===
 let player = {
@@ -29,20 +40,21 @@ let player = {
   width: 30,
   height: 30,
   color: "lime",
+  damage: 1,
+  baseDamage: 1, // Ajout du multiplicateur de dégâts (1 = normal, 2 = x2 damage)
   speed: 4,
   baseSpeed: 4,
   points: 0,
   score: 0,
+  scoreMultiplier: 1, // Multiplicateur de score};
+  baseScoreMultiplier: 1, // Ajout du multiplicateur de score (1 = normal, 2 = x2 score)
   health: 3,
   maxHealth: 3,
   powerups: [],
   shootDouble: false,
   rapidFire: false,
   shield: false,
-  damageMultiplier: 1, // Ajout du multiplicateur de dégâts (1 = normal, 2 = x2 damage)
-  scoreMultiplier: 1,  // Ajout du multiplicateur de score (1 = normal, 2 = x2 score)
 };
-
 let bullets = [];
 let enemies = [];
 let enemyBullets = [];
@@ -59,10 +71,6 @@ let lastShotTime = 0;
 const defaultShootCooldown = 300;
 const rapidFireCooldown = 50;
 
-let spawnTimer = 0;
-let spawnInterval = 2000;
-let spawnAccelerationTimer = 0;
-const minSpawnInterval = 400;
 let enemiesKilled = 0;
 
 // === SPAWN ENNEMIS ===
@@ -72,8 +80,8 @@ function spawnEnemy() {
 
   if (typeChance < 0.3) {
     type = "tank";
-    hp = 5;
-    speed = 1.5 / 3;
+    hp = 4;
+    speed = 0.5;
     width = height = 40;
     color = "darkblue";
   } else if (typeChance < 0.6) {
@@ -91,7 +99,7 @@ function spawnEnemy() {
   }
 
   // Ajout des patterns de mouvement pour les ennemis
-  const patterns = ['straight', 'diagonal', 'circular', 'zigzag'];
+  const patterns = ["straight", "diagonal", "circular", "zigzag"];
   const pattern = patterns[Math.floor(Math.random() * patterns.length)];
 
   const enemy = {
@@ -109,13 +117,13 @@ function spawnEnemy() {
   };
 
   // Propriétés spécifiques selon le pattern attribué
-  if (pattern === 'diagonal') {
+  if (pattern === "diagonal") {
     enemy.dx = (Math.random() < 0.5 ? -1 : 1) * speed;
-  } else if (pattern === 'circular') {
+  } else if (pattern === "circular") {
     enemy.angle = 0;
     enemy.amplitude = 20;
     enemy.initX = enemy.x;
-  } else if (pattern === 'zigzag') {
+  } else if (pattern === "zigzag") {
     enemy.dx = (Math.random() < 0.5 ? -1 : 1) * speed;
   }
   // Le pattern 'straight' n'a pas de propriété supplémentaire
@@ -165,6 +173,20 @@ function drawCircle(obj) {
     0,
     2 * Math.PI
   );
+  ctx.fill();
+}
+
+function drawTriangle(obj) {
+  const { x, y, width, height, color } = obj;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+
+  // Dessine un triangle pointant vers le bas
+  ctx.moveTo(x + width / 2, y + height); // Bas au centre
+  ctx.lineTo(x, y); // Haut gauche
+  ctx.lineTo(x + width, y); // Haut droit
+
+  ctx.closePath();
   ctx.fill();
 }
 
@@ -222,22 +244,22 @@ function update() {
     enemies.forEach((enemy, ei) => {
       // Mise à jour du mouvement en fonction du pattern attribué
       switch (enemy.pattern) {
-        case 'straight':
+        case "straight":
           enemy.y += enemy.speed;
           break;
-        case 'diagonal':
+        case "diagonal":
           enemy.x += enemy.dx;
           enemy.y += enemy.speed;
           if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
             enemy.dx *= -1;
           }
           break;
-        case 'circular':
+        case "circular":
           enemy.y += enemy.speed;
           enemy.angle += 0.1;
           enemy.x = enemy.initX + enemy.amplitude * Math.cos(enemy.angle);
           break;
-        case 'zigzag':
+        case "zigzag":
           enemy.x += enemy.dx;
           if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
             enemy.y += enemy.height; // Descend d'un cran à chaque rebond
@@ -248,7 +270,17 @@ function update() {
           enemy.y += enemy.speed;
       }
 
-      enemy.type === "tank" ? drawCircle(enemy) : drawRect(enemy);
+      switch (enemy.type) {
+        case "tank":
+          drawCircle(enemy); // Dessine un cercle pour le tank
+          break;
+        case "kamikaze":
+          drawRect(enemy); // Dessine un rectangle pour le kamikaze
+          break;
+        case "gunner":
+          drawTriangle(enemy);
+          break;
+      }
 
       if (enemy.type === "gunner") {
         if (Date.now() - enemy.lastShootTime > enemy.shootCooldown) {
@@ -260,6 +292,7 @@ function update() {
             speed: 4,
             color: "red",
           });
+          enemy.shootCooldown = Math.random() * 1000 + 1000; // Réinitialise le cooldown de tir
           enemy.lastShootTime = Date.now();
         }
       }
@@ -272,7 +305,7 @@ function update() {
           bullet.y + bullet.height > enemy.y
         ) {
           bullets.splice(bi, 1);
-          enemy.hp -= player.damageMultiplier; // Utilisation du multiplicateur de dégâts
+          enemy.hp -= player.damage; // Utilisation du multiplicateur de dégâts
           if (enemy.hp <= 0) {
             enemies.splice(ei, 1);
             player.score += 100 * player.scoreMultiplier; // Application du multiplicateur de score
@@ -305,7 +338,7 @@ function update() {
     });
 
     // === LANCEMENT DU BOSS ===
-    if (enemiesKilled >= 1) {
+    if (enemiesKilled >= enemiesToKill) {
       showBossBanner();
       enemies = [];
       boss = {
@@ -328,7 +361,7 @@ function update() {
   // === BOSS ===
   if (boss) {
     // Apparition des tourelles toutes les 30s
-    if (Date.now() - lastTurretSpawnTime > 30000) {
+    if (Date.now() - lastTurretSpawnTime > turretSpawnInterval) {
       spawnTurrets();
       lastTurretSpawnTime = Date.now();
     }
@@ -368,10 +401,10 @@ function update() {
           bullet.y + bullet.height > turret.y
         ) {
           bullets.splice(bi, 1);
-          turret.hp -= player.damageMultiplier; // Utilisation du multiplicateur de dégâts pour les tourelles
+          turret.hp -= player.damage; // Utilisation du multiplicateur de dégâts pour les tourelles
           if (turret.hp <= 0) {
             turrets.splice(ti, 1);
-            player.score += 150 * player.scoreMultiplier; // Multiplicateur de score appliqué
+            player.points += 15; // Multiplicateur de score appliqué
             updateUI();
           }
         }
@@ -386,7 +419,10 @@ function update() {
     drawRect(boss);
 
     // === Laser ===
-    if (!boss.laserCharging && Date.now() - boss.lastLaserTime > 10000) {
+    if (
+      !boss.laserCharging &&
+      Date.now() - boss.lastLaserTime > LaserCooldown
+    ) {
       boss.laserCharging = true;
       boss.laserChargeStart = Date.now();
       shakeDuration = 15; // secoue l’écran lors du chargement du laser
@@ -404,7 +440,7 @@ function update() {
         canvas.height
       );
 
-      if (chargeDuration > 3000) {
+      if (chargeDuration > laserCharge) {
         // TIR DU LASER
         bossLaser = {
           x: boss.x + boss.width / 2 - 10,
@@ -456,11 +492,12 @@ function update() {
         bullet.y + bullet.height > boss.y
       ) {
         bullets.splice(bi, 1);
-        boss.hp -= player.damageMultiplier; // Multiplicateur de dégâts appliqué au boss
+        boss.hp -= player.damage; // Multiplicateur de dégâts appliqué au boss
         if (boss.hp <= 0) {
           message("Boss vaincu ! GG !");
           player.score += 1000 * player.scoreMultiplier; // Multiplicateur de score appliqué
           win = true;
+          bossBeaten += 1; // Incrémente le nombre de boss battus
           resetGame();
         }
       }
@@ -514,9 +551,17 @@ function update() {
 function resetGame() {
   if (!win) {
     player.score = 0;
+    player.points = 0;
+    spawnInterval = 2000;
+    bossBeaten = 0; // Réinitialise le nombre de boss battus
+    enemiesToKill = 100; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
+  } else {
+    player.points += 100; // Bonus de points pour avoir battu le boss
+    if (spawnInterval > minSpawnInterval)
+      spawnInterval = 2000 - bossBeaten * 100; // Réduction de l'intervalle de spawn des ennemis
+    enemiesToKill = 100 + bossBeaten + 10;
   }
   player.health = player.maxHealth;
-  player.points = 0;
   bullets = [];
   enemies = [];
   enemyBullets = [];
@@ -526,7 +571,7 @@ function resetGame() {
   player.shield = false;
   player.speed = player.baseSpeed;
   // Réinitialisation des multiplicateurs
-  player.damageMultiplier = 1;
+  player.damage = 1;
   player.scoreMultiplier = 1;
   boss = null;
   bossLaser = null;
@@ -674,7 +719,7 @@ function pickPowerUp() {
     { name: "rapid_fire", weight: 1 },
     { name: "heal", weight: 0.5 },
     { name: "damage_bonus", weight: 1 }, // Nouveau power-up: x2 damage
-    { name: "score_x2", weight: 1 },     // Nouveau power-up: x2 score
+    { name: "score_x2", weight: 1 }, // Nouveau power-up: x2 score
   ];
   const total = lootTable.reduce((sum, item) => sum + item.weight, 0);
   const roll = Math.random() * total;
@@ -708,14 +753,15 @@ function applyPowerUp(power) {
         updateHealthUI();
       } else {
         message("Vie déjà au maximum !");
+        player.points += 90; // Bonus de 10 points si la vie est déjà au max
       }
       break;
-    case "damage_bonus":  // Applique un multiplicateur de dégâts x2 pendant 10 sec.
-      player.damageMultiplier = 2;
+    case "damage_bonus": // Applique un multiplicateur de dégâts x2 pendant 10 sec.
+      player.damage = player.damage * 2;
       setTimeout(() => (player.damageMultiplier = 1), 10000);
       break;
-    case "score_x2":      // Applique un multiplicateur de score x2 pendant 10 sec.
-      player.scoreMultiplier = 2;
+    case "score_x2": // Applique un multiplicateur de score x2 pendant 10 sec.
+      player.scoreMultiplier = player.scoreMultiplier * 2;
       setTimeout(() => (player.scoreMultiplier = 1), 10000);
       break;
   }
