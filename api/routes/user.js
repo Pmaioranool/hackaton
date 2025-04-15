@@ -24,9 +24,13 @@ router.post("/register", async (req, res) => {
     const newUser = new User({ username, password: hashedPassword });
     await newUser.save();
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { id: newUser._id, username: newUser.username },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
     res.json({ message: "User registered", token: token });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -46,9 +50,13 @@ router.post("/login", async (req, res) => {
     }
 
     // Generate a token (optional, for authentication)
-    const token = jwt.sign({ id: logUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { id: logUser._id, username: logUser.username },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
 
     res.json({ message: "Login successful", token: token });
   } catch (err) {
@@ -75,6 +83,28 @@ router.put("/:id", async (req, res) => {
     const putUser = await User.findOneAndUpdate(
       { _id: id },
       { $set: req.body },
+      { new: true }
+    );
+    res.json({ message: "User modified successfully", putUser });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.put("/newScore/:id", async (req, res) => {
+  const { id } = req.params;
+  const { score } = req.body;
+
+  oldScore = await User.findById(id).then((user) => {
+    return user.score;
+  });
+
+  const newHightScore = score > oldScore ? score : oldScore;
+
+  try {
+    const putUser = await User.findOneAndUpdate(
+      { _id: id },
+      { $set: { score: newHightScore } },
       { new: true }
     );
     res.json({ message: "User modified successfully", putUser });

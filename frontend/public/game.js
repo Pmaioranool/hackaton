@@ -29,6 +29,9 @@ let spawnTimer = 0;
 let spawnInterval = 2000;
 let spawnAccelerationTimer = 0;
 const minSpawnInterval = 400;
+let kamikazeSpawnChance = 6; // 6/10 de chance de spawn un kamikaze
+let gunnerSpawnChance = 3; // 3/10 de chance de spawn un gunner
+// les tank sont le reste des  chance de spawn (2/10)
 
 let win = false;
 let bossBeaten = 10; // Nombre de boss battus
@@ -78,24 +81,24 @@ function spawnEnemy() {
   const typeChance = Math.random();
   let type, hp, speed, width, height, color;
 
-  if (typeChance < 0.3) {
-    type = "tank";
-    hp = 4;
-    speed = 0.5;
-    width = height = 40;
-    color = "darkblue";
-  } else if (typeChance < 0.6) {
+  if (typeChance < kamikazeSpawnChance / 10) {
     type = "kamikaze";
     hp = 1;
     speed = 4 / 3;
     width = height = 30;
     color = "orange";
-  } else {
+  } else if (typeChance < (gunnerSpawnChance + kamikazeSpawnChance) / 10) {
     type = "gunner";
     hp = 2;
     speed = 2 / 3;
     width = height = 30;
     color = "purple";
+  } else {
+    type = "tank";
+    hp = 4;
+    speed = 0.5;
+    width = height = 40;
+    color = "darkblue";
   }
 
   // Ajout des patterns de mouvement pour les ennemis
@@ -548,8 +551,43 @@ function update() {
   ctx.restore();
 }
 
-function resetGame() {
+const getId = async () => {
+  const storedToken = localStorage.getItem("token");
+  try {
+    const response = await fetch("http://localhost:5000/api/token/decrypt", {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${storedToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    if (response.ok) {
+      return data.id; // Retourne l'id de l'utilisateur
+    }
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'id :", error);
+  }
+};
+
+const putUserScore = async (id, score) => {
+  console.log("id", id);
+  console.log("score", score);
+  try {
+    await fetch(`http://localhost:5000/api/users/newScore/${id}`, {
+      method: "put",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ score: score }),
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'id :", error);
+  }
+};
+
+async function resetGame() {
   if (!win) {
+    const id = await getId();
+    putUserScore(id, player.score); // Envoie le score au backend
     player.score = 0;
     player.points = 0;
     spawnInterval = 2000;
@@ -561,11 +599,12 @@ function resetGame() {
       spawnInterval = 2000 - bossBeaten * 100; // Réduction de l'intervalle de spawn des ennemis
     enemiesToKill = 100 + bossBeaten + 10;
   }
+
   player.health = player.maxHealth;
   bullets = [];
   enemies = [];
   enemyBullets = [];
-  powerups = [];
+  player.powerups = [];
   player.shootDouble = false;
   player.rapidFire = false;
   player.shield = false;
@@ -579,6 +618,8 @@ function resetGame() {
   win = false;
   updateUI();
   updateHealthUI();
+  const event = new Event("resetGame");
+  window.dispatchEvent(event);
 }
 
 function updateUI() {

@@ -20,7 +20,24 @@ export const player = {
   shield: false,
 };
 
-export function resetPlayerStats(win, bossBeaten) {
+const getId = async () => {
+  const token = localStorage.getItem("token");
+
+  await fetch(`http://localhost:5000/api/token/${token}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (response.ok) {
+    const data = await response.json();
+    login(data.token);
+    router.push("/login");
+    return data.id;
+  }
+};
+
+export async function resetPlayerStats(win, bossBeaten) {
+  const id = getId();
   if (!win) {
     player.score = 0;
     player.points = 0;
@@ -35,4 +52,10 @@ export function resetPlayerStats(win, bossBeaten) {
   player.rapidFire = false;
   player.shield = false;
   player.speed = player.baseSpeed;
+
+  await fetch(`http://localhost:5000/api/users/${id}`, {
+    method: "put",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ score: player.score }),
+  });
 }

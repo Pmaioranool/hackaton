@@ -20,11 +20,11 @@ let gameOver = false;
 let restartTimer = 0;
 let enemiesKilled = 0;
 
-function resetGame() {
+async function resetGame() {
   bullets.length = 0;
   enemies.length = 0;
   enemyBullets.length = 0;
-  resetPlayerStats(false, 0);
+  await resetPlayerStats(gameOver, 0);
   spawnInterval = 2000;
   spawnTimer = 0;
   spawnAccelerationTimer = 0;
