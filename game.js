@@ -8,6 +8,19 @@ const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
 shootSound.volume = 0.3;
 
+function message(text) {
+  const messageEl = document.getElementById("message");
+  messageEl.classList.remove("hidden");
+  messageEl.textContent = text;
+
+  setTimeout(() => {
+    messageEl.textContent = "";
+    messageEl.classList.add("hidden");
+  }, 2000);
+}
+
+let win = false;
+
 // === PLAYER SETUP ===
 let player = {
   x: canvas.width / 2 - 15,
@@ -15,8 +28,8 @@ let player = {
   width: 30,
   height: 30,
   color: "lime",
-  speed: 5,
-  baseSpeed: 7,
+  speed: 4,
+  baseSpeed: 4,
   points: 0,
   score: 0,
   health: 3,
@@ -35,7 +48,7 @@ let bossLaser = null;
 let keys = {};
 
 let lastShotTime = 0;
-const defaultShootCooldown = 200;
+const defaultShootCooldown = 300;
 const rapidFireCooldown = 50;
 
 let spawnTimer = 0;
@@ -52,19 +65,19 @@ function spawnEnemy() {
   if (typeChance < 0.3) {
     type = "tank";
     hp = 5;
-    speed = 1.5;
+    speed = 1.5 / 3;
     width = height = 40;
     color = "darkblue";
   } else if (typeChance < 0.6) {
     type = "kamikaze";
     hp = 1;
-    speed = 4;
+    speed = 4 / 3;
     width = height = 30;
     color = "orange";
   } else {
     type = "gunner";
     hp = 2;
-    speed = 2;
+    speed = 2 / 3;
     width = height = 30;
     color = "purple";
   }
@@ -78,7 +91,7 @@ function spawnEnemy() {
     speed,
     type,
     hp,
-    shootCooldown: 1000,
+    shootCooldown: Math.random() * 1000 + 1000, // 1s à 3s,
     lastShootTime: Date.now(),
   });
 }
@@ -149,6 +162,7 @@ function update() {
             speed: 4,
             color: "red",
           });
+
           enemy.lastShootTime = Date.now();
         }
       }
@@ -179,22 +193,22 @@ function update() {
         player.y < enemy.y + enemy.height &&
         player.y + player.height > enemy.y
       ) {
-        if (!player.shield) {
+        if (player.shield) {
+          player.shield = false; // Le bouclier absorbe le coup
+        } else {
           player.health--;
           updateHealthUI();
-          enemies.splice(ei, 1);
           if (player.health <= 0) {
-            alert("Game Over!");
+            message("Game Over!");
             resetGame();
           }
-        } else {
-          enemies.splice(ei, 1);
         }
+        enemies.splice(ei, 1);
       }
     });
 
     // === LANCEMENT DU BOSS ===
-    if (enemiesKilled >= 100) {
+    if (enemiesKilled >= 1) {
       enemies = [];
       boss = {
         x: canvas.width / 2 - 100,
@@ -260,7 +274,7 @@ function update() {
         player.x < bossLaser.x + bossLaser.width &&
         player.x + player.width > bossLaser.x
       ) {
-        alert("Touché par le laser ! Game Over!");
+        message("Touché par le laser ! Game Over!");
         resetGame();
         bossLaser = null;
         return;
@@ -294,7 +308,9 @@ function update() {
         bullets.splice(bi, 1);
         boss.hp--;
         if (boss.hp <= 0) {
-          alert("Boss vaincu ! GG !");
+          message("Boss vaincu ! GG !");
+          player.score += 1000;
+          win = true;
           resetGame();
         }
       }
@@ -311,11 +327,13 @@ function update() {
       b.y < player.y + player.height &&
       b.y + b.height > player.y
     ) {
-      if (!player.shield) {
+      if (player.shield) {
+        player.shield = false; // Le bouclier absorbe le coup
+      } else {
         player.health--;
         updateHealthUI();
         if (player.health <= 0) {
-          alert("Game Over!");
+          message("Game Over!");
           resetGame();
         }
       }
@@ -341,15 +359,23 @@ function update() {
 }
 
 function resetGame() {
+  if (!win) {
+    player.score = 0;
+  }
   player.health = player.maxHealth;
-  player.score = 0;
   player.points = 0;
   bullets = [];
   enemies = [];
   enemyBullets = [];
+  powerups = [];
+  player.shootDouble = false;
+  player.rapidFire = false;
+  player.shield = false;
+  player.speed = player.baseSpeed;
   boss = null;
   bossLaser = null;
   enemiesKilled = 0;
+  win = false;
   updateUI();
   updateHealthUI();
 }
@@ -365,68 +391,122 @@ function updateHealthUI() {
 
 function loop() {
   update();
+
+  // Tir automatique
+  const now = Date.now();
+  const shootCooldown = player.rapidFire
+    ? rapidFireCooldown
+    : defaultShootCooldown;
+  if (now - lastShotTime >= shootCooldown) {
+    lastShotTime = now;
+    shootSound.currentTime = 0;
+    shootSound.play();
+    if (player.shootDouble) {
+      bullets.push(
+        {
+          x: player.x + player.width / 2 - 10,
+          y: player.y,
+          width: 4,
+          height: 10,
+          color: "white",
+          speed: 7,
+        },
+        {
+          x: player.x + player.width / 2 + 6,
+          y: player.y,
+          width: 4,
+          height: 10,
+          color: "white",
+          speed: 7,
+        }
+      );
+    } else {
+      bullets.push({
+        x: player.x + player.width / 2 - 2,
+        y: player.y,
+        width: 4,
+        height: 10,
+        color: "white",
+        speed: 7,
+      });
+    }
+  }
+
   requestAnimationFrame(loop);
 }
 
 // === CONTROLS ===
 window.addEventListener("keydown", (e) => {
   keys[e.key] = true;
-  if (e.key === " " || e.code === "Space") {
-    const now = Date.now();
-    const shootCooldown = player.rapidFire
-      ? rapidFireCooldown
-      : defaultShootCooldown;
-    if (now - lastShotTime >= shootCooldown) {
-      lastShotTime = now;
-      shootSound.currentTime = 0;
-      shootSound.play();
-      if (player.shootDouble) {
-        bullets.push(
-          {
-            x: player.x + player.width / 2 - 10,
-            y: player.y,
-            width: 4,
-            height: 10,
-            color: "white",
-            speed: 7,
-          },
-          {
-            x: player.x + player.width / 2 + 6,
-            y: player.y,
-            width: 4,
-            height: 10,
-            color: "white",
-            speed: 7,
-          }
-        );
-      } else {
-        bullets.push({
-          x: player.x + player.width / 2 - 2,
-          y: player.y,
-          width: 4,
-          height: 10,
-          color: "white",
-          speed: 7,
-        });
-      }
-    }
-  }
+  // shoot with space
+  // if (e.key === " " || e.code === "Space") {
+  //   // const now = Date.now();
+  //   // const shootCooldown = player.rapidFire
+  //   //   ? rapidFireCooldown
+  //   //   : defaultShootCooldown;
+  //   // if (now - lastShotTime >= shootCooldown) {
+  //   //   lastShotTime = now;
+  //   //   shootSound.currentTime = 0;
+  //   //   shootSound.play();
+  //   //   if (player.shootDouble) {
+  //   //     bullets.push(
+  //   //       {
+  //   //         x: player.x + player.width / 2 - 10,
+  //   //         y: player.y,
+  //   //         width: 4,
+  //   //         height: 10,
+  //   //         color: "white",
+  //   //         speed: 7,
+  //   //       },
+  //   //       {
+  //   //         x: player.x + player.width / 2 + 6,
+  //   //         y: player.y,
+  //   //         width: 4,
+  //   //         height: 10,
+  //   //         color: "white",
+  //   //         speed: 7,
+  //   //       }
+  //   //     );
+  //   //   } else {
+  //   //     bullets.push({
+  //   //       x: player.x + player.width / 2 - 2,
+  //   //       y: player.y,
+  //   //       width: 4,
+  //   //       height: 10,
+  //   //       color: "white",
+  //   //       speed: 7,
+  //   //     });
+  //   //   }
+  //   // }
+  // }
 });
 
 window.addEventListener("keyup", (e) => {
   keys[e.key] = false;
 });
 
-lotteryBtn.addEventListener("click", () => {
+// === LOTTERY ===
+const lotteryRoll = () => {
   if (player.points >= 100) {
     player.points -= 100;
     const reward = pickPowerUp();
     player.powerups.push(reward);
-    alert(`Tu as gagné : ${reward}`);
+    message(`Tu as gagné : ${reward}`);
     applyPowerUp(reward);
     updateUI();
   } else {
-    alert("Pas assez de points !");
+    message("Pas assez de points !");
+  }
+};
+
+lotteryBtn.addEventListener("click", () => {
+  lotteryRoll();
+});
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "l") {
+    e.preventDefault(); // Empêche le comportement par défaut de la touche "L"
+    lotteryRoll();
   }
 });
 
@@ -469,7 +549,7 @@ function applyPowerUp(power) {
         player.health++;
         updateHealthUI();
       } else {
-        alert("Vie déjà au maximum !");
+        message("Vie déjà au maximum !");
       }
       break;
   }
