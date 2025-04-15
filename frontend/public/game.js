@@ -88,7 +88,11 @@ function spawnEnemy() {
     color = "purple";
   }
 
-  enemies.push({
+  // Ajout des patterns de mouvement pour les ennemis
+  const patterns = ['straight', 'diagonal', 'circular', 'zigzag'];
+  const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+
+  const enemy = {
     x: Math.random() * (canvas.width - width),
     y: -height,
     width,
@@ -99,7 +103,22 @@ function spawnEnemy() {
     hp,
     shootCooldown: Math.random() * 1000 + 1000, // 1s à 3s,
     lastShootTime: Date.now(),
-  });
+    pattern, // le pattern de mouvement attribué
+  };
+
+  // Propriétés spécifiques selon le pattern attribué
+  if (pattern === 'diagonal') {
+    enemy.dx = (Math.random() < 0.5 ? -1 : 1) * speed;
+  } else if (pattern === 'circular') {
+    enemy.angle = 0;
+    enemy.amplitude = 20;
+    enemy.initX = enemy.x;
+  } else if (pattern === 'zigzag') {
+    enemy.dx = (Math.random() < 0.5 ? -1 : 1) * speed;
+  }
+  // Le pattern 'straight' n'a pas de propriété supplémentaire
+
+  enemies.push(enemy);
 }
 
 function spawnTurrets() {
@@ -199,7 +218,33 @@ function update() {
   // === ENNEMIS ===
   if (!boss) {
     enemies.forEach((enemy, ei) => {
-      enemy.y += enemy.speed;
+      // Mise à jour du mouvement en fonction du pattern attribué
+      switch (enemy.pattern) {
+        case 'straight':
+          enemy.y += enemy.speed;
+          break;
+        case 'diagonal':
+          enemy.x += enemy.dx;
+          enemy.y += enemy.speed;
+          if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+            enemy.dx *= -1;
+          }
+          break;
+        case 'circular':
+          enemy.y += enemy.speed;
+          enemy.angle += 0.1;
+          enemy.x = enemy.initX + enemy.amplitude * Math.cos(enemy.angle);
+          break;
+        case 'zigzag':
+          enemy.x += enemy.dx;
+          if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+            enemy.y += enemy.height; // Descend d'un cran à chaque rebond
+            enemy.dx *= -1;
+          }
+          break;
+        default:
+          enemy.y += enemy.speed;
+      }
 
       enemy.type === "tank" ? drawCircle(enemy) : drawRect(enemy);
 
@@ -213,7 +258,6 @@ function update() {
             speed: 4,
             color: "red",
           });
-
           enemy.lastShootTime = Date.now();
         }
       }
@@ -237,7 +281,7 @@ function update() {
         }
       });
 
-      // Collision joueur
+      // Collision avec le joueur
       if (
         player.x < enemy.x + enemy.width &&
         player.x + player.width > enemy.x &&
@@ -343,13 +387,13 @@ function update() {
     if (!boss.laserCharging && Date.now() - boss.lastLaserTime > 10000) {
       boss.laserCharging = true;
       boss.laserChargeStart = Date.now();
-      shakeDuration = 15; // ← secoue l’écran quand le laser commence à charger
+      shakeDuration = 15; // secoue l’écran lors du chargement du laser
     }
 
     if (boss.laserCharging) {
       const chargeDuration = Date.now() - boss.laserChargeStart;
 
-      // Charge visuelle
+      // Indicateur visuel de charge
       ctx.fillStyle = "rgba(255,0,0,0.3)";
       ctx.fillRect(
         boss.x + boss.width / 2 - 10,
@@ -369,7 +413,7 @@ function update() {
       }
     }
 
-    // Affichage et collision laser
+    // Affichage et collision du laser
     if (bossLaser) {
       ctx.fillStyle = "red";
       ctx.fillRect(bossLaser.x, 0, bossLaser.width, canvas.height);
@@ -384,7 +428,7 @@ function update() {
         return;
       }
 
-      // Laser reste 0.5s
+      // Le laser reste affiché 0.5s
       if (Date.now() - boss.lastLaserTime > 500) bossLaser = null;
     }
 
