@@ -40,7 +40,7 @@ let player = {
   rapidFire: false,
   shield: false,
   damageMultiplier: 1, // Ajout du multiplicateur de dégâts (1 = normal, 2 = x2 damage)
-  scoreMultiplier: 1,  // Ajout du multiplicateur de score (1 = normal, 2 = x2 score)
+  scoreMultiplier: 1, // Ajout du multiplicateur de score (1 = normal, 2 = x2 score)
 };
 
 let bullets = [];
@@ -91,7 +91,7 @@ function spawnEnemy() {
   }
 
   // Ajout des patterns de mouvement pour les ennemis
-  const patterns = ['straight', 'diagonal', 'circular', 'zigzag'];
+  const patterns = ["straight", "diagonal", "circular", "zigzag"];
   const pattern = patterns[Math.floor(Math.random() * patterns.length)];
 
   const enemy = {
@@ -109,13 +109,13 @@ function spawnEnemy() {
   };
 
   // Propriétés spécifiques selon le pattern attribué
-  if (pattern === 'diagonal') {
+  if (pattern === "diagonal") {
     enemy.dx = (Math.random() < 0.5 ? -1 : 1) * speed;
-  } else if (pattern === 'circular') {
+  } else if (pattern === "circular") {
     enemy.angle = 0;
     enemy.amplitude = 20;
     enemy.initX = enemy.x;
-  } else if (pattern === 'zigzag') {
+  } else if (pattern === "zigzag") {
     enemy.dx = (Math.random() < 0.5 ? -1 : 1) * speed;
   }
   // Le pattern 'straight' n'a pas de propriété supplémentaire
@@ -222,22 +222,22 @@ function update() {
     enemies.forEach((enemy, ei) => {
       // Mise à jour du mouvement en fonction du pattern attribué
       switch (enemy.pattern) {
-        case 'straight':
+        case "straight":
           enemy.y += enemy.speed;
           break;
-        case 'diagonal':
+        case "diagonal":
           enemy.x += enemy.dx;
           enemy.y += enemy.speed;
           if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
             enemy.dx *= -1;
           }
           break;
-        case 'circular':
+        case "circular":
           enemy.y += enemy.speed;
           enemy.angle += 0.1;
           enemy.x = enemy.initX + enemy.amplitude * Math.cos(enemy.angle);
           break;
-        case 'zigzag':
+        case "zigzag":
           enemy.x += enemy.dx;
           if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
             enemy.y += enemy.height; // Descend d'un cran à chaque rebond
@@ -674,7 +674,7 @@ function pickPowerUp() {
     { name: "rapid_fire", weight: 1 },
     { name: "heal", weight: 0.5 },
     { name: "damage_bonus", weight: 1 }, // Nouveau power-up: x2 damage
-    { name: "score_x2", weight: 1 },     // Nouveau power-up: x2 score
+    { name: "score_x2", weight: 1 }, // Nouveau power-up: x2 score
   ];
   const total = lootTable.reduce((sum, item) => sum + item.weight, 0);
   const roll = Math.random() * total;
@@ -710,11 +710,11 @@ function applyPowerUp(power) {
         message("Vie déjà au maximum !");
       }
       break;
-    case "damage_bonus":  // Applique un multiplicateur de dégâts x2 pendant 10 sec.
+    case "damage_bonus": // Applique un multiplicateur de dégâts x2 pendant 10 sec.
       player.damageMultiplier = 2;
       setTimeout(() => (player.damageMultiplier = 1), 10000);
       break;
-    case "score_x2":      // Applique un multiplicateur de score x2 pendant 10 sec.
+    case "score_x2": // Applique un multiplicateur de score x2 pendant 10 sec.
       player.scoreMultiplier = 2;
       setTimeout(() => (player.scoreMultiplier = 1), 10000);
       break;
