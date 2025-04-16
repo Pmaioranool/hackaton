@@ -8,6 +8,7 @@ const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
 const startButton = document.querySelector("#start-button");
 const pauseButton = document.querySelector("#pause-button");
+const backgroundMusic = new Audio("/asset/music/background.mp3");
 
 shootSound.volume = 0.3;
 const enemyImages = {
@@ -17,11 +18,18 @@ const enemyImages = {
   boss: new Image()
 };
 
+backgroundMusic.volume = 0.5; 
+//bossMusic.volume = 0.6;
+//gameOverMusic.volume = 0.7;
+
+// Configurer la lecture en boucle
+backgroundMusic.loop = true;
+//bossMusic.loop = true;
 // Configuration des sources des images
-enemyImages.kamikaze.src = "/asset/enemy_kamikaze.png";
-enemyImages.gunner.src = "/asset/enemy_gunner.png";
-enemyImages.tank.src = "/asset/enemy_tank.png";
-enemyImages.boss.src = "/asset/boss.png";
+enemyImages.kamikaze.src = "/asset/sprite/enemy_kamikaze.png";
+enemyImages.gunner.src = "/asset/sprite/enemy_gunner.png";
+enemyImages.tank.src = "/asset/sprite/enemy_tank.png";
+enemyImages.boss.src = "/asset/sprite/boss.png";
 function message(text) {
   const messageEl = document.getElementById("message");
   messageEl.classList.remove("hidden");
@@ -35,7 +43,7 @@ function message(text) {
 
 // variable correctif
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let enemiesToKill = 1;
+let enemiesToKill = 50;
 let laserCharge = 5000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
 let bossHP = 300;
@@ -96,10 +104,12 @@ let player = {
 const defaultShootCooldown = 300;
 // On ajoute l'image du joueur pour remplacer le cube
 player.img = new Image();
-player.img.src = "/asset/sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
+player.img.src = "/asset/sprite/sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
 
 const bossImage = new Image();
-bossImage.src = "/asset/boss.png"; // Mets le chemin correct ici si l'image est dans un sous-dossier
+bossImage.src = "/asset/boss.png";
+bossImage.onload = () => console.log("Boss image loaded successfully");
+bossImage.onerror = () => console.error("Failed to load boss image"); // Mets le chemin correct ici si l'image est dans un sous-dossier
 
 let bullets = [];
 let enemies = [];
@@ -414,6 +424,7 @@ function update() {
         lastLaserTime: 0,
         laserCharging: false,
         laserChargeStart: 0,
+        img : bossImage,
       };
     }
   }
@@ -664,6 +675,15 @@ const putUserScore = async (id, score) => {
 };
 
 async function resetGame() {
+backgroundMusic.pause();
+//bossMusic.pause();
+//gameOverMusic.pause();
+
+// Jouer la musique de fond si le jeu n'est pas en Game Over
+if (!gameOver) {
+  backgroundMusic.currentTime = 0;
+  backgroundMusic.play();
+}
   if (!win) {
     const id = await getId();
     putUserScore(id, player.score); // Envoie le score au backend
