@@ -10,7 +10,62 @@ router.get("/", async (req, res) => {
   const users = await User.find().sort({ score: -1 }).limit(10);
   res.json(users);
 });
+router.put("/update", async (req, res) => {
+  const { newUsername, newPassword } = req.body;
+  const token = req.headers.authorization?.split(' ')[1];
 
+  if (!token) {
+    return res.status(401).json({ message: "Authentification requise." });
+  }
+
+  try {
+    // Vérifier le token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur introuvable." });
+    }
+
+    // Vérifier si le nouveau username est déjà pris
+    if (newUsername && newUsername !== user.username) {
+      const usernameExists = await User.findOne({ username: newUsername });
+      if (usernameExists) {
+        return res.status(400).json({ message: "Ce pseudo est déjà utilisé." });
+      }
+      user.username = newUsername;
+    }
+
+    if (newPassword) {
+      const hashed = await bcrypt.hash(newPassword, 10);
+      user.password = hashed;
+    }
+
+    await user.save();
+    
+    // Générer un nouveau token si le username a changé
+    let newToken = token;
+    if (newUsername) {
+      newToken = jwt.sign(
+        { id: user._id, username: user.username },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+    }
+
+    res.status(200).json({ 
+      message: "Informations mises à jour.",
+      token: newToken 
+    });
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: "Token invalide." });
+    }
+    console.error("Erreur backend :", err);
+    res.status(500).json({ message: "Erreur serveur." });
+  }
+});
 // POST register
 router.post("/register", async (req, res) => {
   const { username, password } = req.body;
