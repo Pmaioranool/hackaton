@@ -13,6 +13,7 @@ const startButton = document.querySelector("#start-button");
 const pauseButton = document.querySelector("#pause-button");
 const powerUpsContainer = document.getElementById("power-ups-container");
 const spriteSelector = document.querySelector("#spriteSelector");
+const gameOverContainer = document.querySelector("#gameOverContainer");
 let isShopOpen = false;
 shootSound.volume = 0.3;
 
@@ -713,8 +714,6 @@ function update() {
         player.x < bossLaser.x + bossLaser.width &&
         player.x + player.width > bossLaser.x
       ) {
-        // message("Touché par le laser ! Game Over!");
-        // Active gameOver au lieu d'appeler resetGame()
         player.health = player.health - 2;
         updateHealthUI();
         bossLaser = null;
@@ -854,10 +853,11 @@ const putUserScore = async (id, score) => {
 };
 
 async function resetGame() {
+  gameOverContainer.classList.add("hidden");
+
   try {
     await backgroundMusic.pause();
     await bossMusic.pause();
-    await gameOverMusic.pause();
 
     if (!gameOver) {
       backgroundMusic.currentTime = 0;
@@ -954,6 +954,8 @@ function updateHealthUI() {
   healthEl.textContent = `Vie: ${player.health}`;
 }
 
+// Crée un conteneur pour l'écran de Game Over
+
 function loop() {
   // Si le jeu est en pause, ne pas continuer la boucle
   if (isPaused) {
@@ -963,30 +965,26 @@ function loop() {
 
   // Si Game Over, arrête toute mise à jour du jeu et affiche l'écran de fin
   if (gameOver) {
+    gameOverContainer.style.display = "flex";
     backgroundMusic.pause();
     bossMusic.pause();
     gameOverMusic.currentTime = 0;
     gameOverMusic
       .play()
       .catch((e) => console.error("Erreur game over music:", e));
-    ctx.save();
-    ctx.fillStyle = "rgba(50,50,50,0.95)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
-    ctx.font = "bold 48px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 80);
-    ctx.font = "20px Arial";
-    ctx.fillText(
-      "Appuie sur Entrée pour rejouer",
-      canvas.width / 2,
-      canvas.height / 2 + 20
-    );
-    ctx.restore();
+
+    gameOverContainer.classList.remove("hidden");
+
+    gameOverContainer.innerHTML = `
+  <h1 class="game-over-item">GAME OVER</h1>
+  <div class="final-score game-over-item">Score Final: ${player.score}</div>
+  <p>appuyer sur entrer pour rejouer</p>
+`;
 
     // Vérifie si Entrée est pressée pour redémarrer
     if (keys["Enter"]) {
       resetGame();
+      gameOverMusic.pause();
       gameOver = false;
     }
     requestAnimationFrame(loop);

@@ -113,6 +113,7 @@ export default function Home() {
       </nav>
       <main id="container">
         <canvas id="game" width="800" height="600"></canvas>
+        <div id="gameOverContainer" className="hidden"></div>
         <div id="ui">
           <div>
             High Score:{" "}
