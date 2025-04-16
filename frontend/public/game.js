@@ -22,7 +22,7 @@ function message(text) {
 
 // variable correctif
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let enemiesToKill = 1;
+let enemiesToKill = 100;
 let laserCharge = 1000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
 let bossHP = 300;
@@ -34,14 +34,25 @@ let kamikazeSpawnChance = 6; // 6/10 de chance de spawn un kamikaze
 let gunnerSpawnChance = 3; // 3/10 de chance de spawn un gunner
 // les tank sont le reste des  chance de spawn (1/10)
 
-let double_shot;
+let chance_double_shot = 0.5;
+let laps_double_shot = 7000;
+
+let chance_rapid_fire = 0.5;
+let laps_rapid_fire = 2000;
+const rapidFireCooldown = 100;
+
+let chance_damage_bonus = 0.5; // Applique un multiplicateur de dégâts x2 pendant 10 sec.
+let laps_damage_bonus = 7500;
 
 let chance_speed_up = 1;
-let chance_shield = 2;
-let chance_rapid_fire = 1;
-let chance_heal = 3;
-let chance_damage_bonus = 1; // Applique un multiplicateur de dégâts x2 pendant 10 sec.
+let laps_speed_up = 3000;
+
+let chance_heal = 2.5;
+let chance_shield = 3;
+let laps_shield = 10000;
+
 let chance_score_x2 = 2; // Applique un multiplicateur de score x2 pendant 10 sec.
+let laps_score_x2 = 1000;
 
 let win = false;
 let bossBeaten = 0; // Nombre de boss battus
@@ -67,6 +78,8 @@ let player = {
   rapidFire: false,
   shield: false,
 };
+
+const defaultShootCooldown = 300;
 // On ajoute l'image du joueur pour remplacer le cube
 player.img = new Image();
 player.img.src = "bombardino-crocodilo.png"; // Remplace ce chemin par l'URL de ton image
@@ -87,8 +100,6 @@ let lastTurretSpawnTime = 0;
 let keys = {};
 
 let lastShotTime = 0;
-const defaultShootCooldown = 300;
-const rapidFireCooldown = 50;
 
 let enemiesKilled = 0;
 
@@ -629,7 +640,7 @@ async function resetGame() {
     const id = await getId();
     putUserScore(id, player.score); // Envoie le score au backend
     player.score = 0;
-    player.points = 1000000000;
+    player.points = 0;
     spawnInterval = 2000;
     bossBeaten = 0; // Réinitialise le nombre de boss battus
     enemiesToKill = 1; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
@@ -848,13 +859,13 @@ window.addEventListener("keydown", (e) => {
 
 function pickPowerUp() {
   const lootTable = [
-    { name: "double_shot", weight: 2 },
-    { name: "shield", weight: 3 },
-    { name: "speed_up", weight: 4 },
-    { name: "rapid_fire", weight: 1 },
-    { name: "heal", weight: 0.5 },
-    { name: "damage_bonus", weight: 1 }, // Nouveau power-up: x2 damage
-    { name: "score_x2", weight: 1 }, // Nouveau power-up: x2 score
+    { name: "double_shot", weight: chance_double_shot },
+    { name: "shield", weight: chance_shield },
+    { name: "speed_up", weight: chance_speed_up },
+    { name: "rapid_fire", weight: chance_rapid_fire },
+    { name: "heal", weight: chance_heal },
+    { name: "damage_bonus", weight: chance_damage_bonus }, // Nouveau power-up: x2 damage
+    { name: "score_x2", weight: chance_score_x2 }, // Nouveau power-up: x2 score
   ];
   const total = lootTable.reduce((sum, item) => sum + item.weight, 0);
   const roll = Math.random() * total;
@@ -869,18 +880,18 @@ function applyPowerUp(power) {
   switch (power) {
     case "double_shot":
       player.shootDouble = true;
-      setTimeout(() => (player.shootDouble = false), 10000);
+      setTimeout(() => (player.shootDouble = false), laps_double_shot);
       break;
     case "speed_up":
       player.speed = player.baseSpeed + 3;
-      setTimeout(() => (player.speed = player.baseSpeed), 20000);
+      setTimeout(() => (player.speed = player.baseSpeed), laps_speed_up);
       break;
     case "shield":
       player.shield = true;
       break;
     case "rapid_fire":
       player.rapidFire = true;
-      setTimeout(() => (player.rapidFire = false), 5000);
+      setTimeout(() => (player.rapidFire = false), laps_rapid_fire);
       break;
     case "heal":
       if (player.health < player.maxHealth) {
@@ -889,16 +900,25 @@ function applyPowerUp(power) {
         updateHealthUI();
       } else {
         message("Vie déjà au maximum !");
-        player.points += 90; // Bonus de 10 points si la vie est déjà au max
+        player.points += 50; // Bonus de 10 points si la vie est déjà au max
       }
       break;
     case "damage_bonus": // Applique un multiplicateur de dégâts x2 pendant 10 sec.
       player.damage = player.damage * 2;
-      setTimeout(() => (player.damage = 1), 10000);
+      setTimeout(() => (player.damage = player.damage / 2), laps_damage_bonus);
       break;
     case "score_x2": // Applique un multiplicateur de score x2 pendant 10 sec.
+      if (player.scoreMultiplier === 32) {
+        message("Déjà x32 !");
+        player.points += 50; // Bonus de 10 points si le multiplicateur est déjà au max
+        return;
+      }
       player.scoreMultiplier = player.scoreMultiplier * 2;
-      setTimeout(() => (player.scoreMultiplier = 1), 10000);
+      setTimeout(
+        () => (player.scoreMultiplier = player.scoreMultiplier / 2),
+        laps_score_x2
+      );
+      updateUI(player.score, player.points);
       break;
   }
 }
