@@ -16,32 +16,35 @@ export default function Login() {
       body: JSON.stringify({ username, password }),
     });
 
+    const data = await response.json();
+
     if (response.ok) {
-      const data = await response.json();
       login(data.token);
       router.push("/");
+    } else {
+      alert("Erreur : " + data.error); // 🧠 très utile pour voir ce qui cloche
     }
   };
 
   return (
     <form onSubmit={handleLogin}>
       <h1>Connexion</h1>
-      <a href="/register">Créer un compte</a>
+      <a href='/register'>Créer un compte</a>
       <br />
       <br />
       <input
-        type="text"
-        placeholder="Nom"
+        type='text'
+        placeholder='Nom'
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
       <input
-        type="password"
-        placeholder="Mot de passe"
+        type='password'
+        placeholder='Mot de passe'
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button type="submit">Se connecter</button>
+      <button type='submit'>Se connecter</button>
     </form>
   );
 }

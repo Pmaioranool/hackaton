@@ -3,127 +3,119 @@ import { useRouter } from "next/router";
 import AuthContext from "../context/AuthContext";
 
 export default function Home() {
-  const { token } = useContext(AuthContext); // Vérifie si l'utilisateur est connecté
+  const { token, loading, logout } = useContext(AuthContext);
   const router = useRouter();
-  const [highScore, setHighScore] = useState(null); // État pour stocker le score
+  const [highScore, setHighScore] = useState(null);
 
-  // Redirige vers /login si l'utilisateur n'est pas connecté
+  // Redirection si pas de token après chargement du contexte
   useEffect(() => {
-    if (!token) {
+    if (!loading && !token) {
       router.push("/login");
     }
-  }, [token]);
+  }, [token, loading]);
 
-  // Charge le script du jeu après le rendu de la page
+  // Charge le script du jeu uniquement quand token est présent
   useEffect(() => {
-    if (!token) return; // Ne charge pas le script si l'utilisateur n'est pas connecté
+    if (!token || loading) return;
 
     const script = document.createElement("script");
-    script.src = "/game.js";
+    script.src = "/game/js/main.js";
     script.async = true;
     script.type = "module";
     document.body.appendChild(script);
 
     return () => {
-      // Nettoie le script lors du démontage du composant
       document.body.removeChild(script);
     };
-  }, [token]);
+  }, [token, loading]);
 
-  // Récupère le score de l'utilisateur
+  // Met à jour le high score à chaque reset
   useEffect(() => {
+    let isMounted = true;
+
     const handleResetGame = () => {
       const fetchHighScore = async () => {
         const storedToken = localStorage.getItem("token");
         try {
-          const response = await fetch(
-            "http://localhost:5000/api/token/decrypt",
-            {
-              method: "GET",
-              headers: {
-                authorization: `Bearer ${storedToken}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const response = await fetch("http://localhost:5000/api/token/decrypt", {
+            method: "GET",
+            headers: {
+              authorization: `Bearer ${storedToken}`,
+              "Content-Type": "application/json",
+            },
+          });
           const data = await response.json();
           if (response.ok) {
             const userId = data.id;
-            const userResponse = await fetch(
-              `http://localhost:5000/api/users/${userId}`,
-              {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              }
-            );
+            const userResponse = await fetch(`http://localhost:5000/api/users/${userId}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
             const userData = await userResponse.json();
-            if (userResponse.ok) {
-              setHighScore(userData.score); // Met à jour le score
+            if (userResponse.ok && isMounted) {
+              setHighScore(userData.score);
             } else {
-              console.error(
-                "Erreur lors de la récupération de l'utilisateur :",
-                userData
-              );
+              console.error("Erreur utilisateur :", userData);
             }
           }
         } catch (error) {
-          console.error("Erreur lors de la récupération de l'id :", error);
+          console.error("Erreur de récupération :", error);
         }
       };
 
       fetchHighScore();
     };
 
-    // Ajoute un écouteur pour l'événement "resetGame"
     window.addEventListener("resetGame", handleResetGame);
 
-    // Nettoie l'écouteur lors du démontage du composant
     return () => {
+      isMounted = false;
       window.removeEventListener("resetGame", handleResetGame);
     };
   }, []);
 
-  // Affiche un message pendant la redirection
-  if (!token) {
-    return <p>Redirection en cours...</p>;
-  }
+  if (loading) return <p>Chargement du contexte...</p>;
+  if (!token) return <p>Redirection en cours...</p>;
 
   return (
     <div>
-      <link rel="stylesheet" href="/style.css" />
-      <span id="message" className="hidden"></span>
+      <link rel='stylesheet' href='/style.css' />
+      <span id='message' className='hidden'></span>
       <nav>
         <ul>
           <li>
-            <a href="/logout">Logout</a>
+            <button
+              onClick={() => logout()}
+              style={{ background: "none", border: "none", color: "blue", cursor: "pointer" }}>
+              Logout
+            </button>
           </li>
+
           <li>
-            <a href="/account">Account</a>
+            <a href='/account'>Account</a>
           </li>
         </ul>
       </nav>
-      <main id="container">
-        <canvas id="game" width="800" height="600"></canvas>
-        <div id="ui">
+      <main id='container'>
+        <canvas id='game' width='800' height='600'></canvas>
+        <div id='ui'>
           <div>
             High Score:{" "}
-            <span id="high-score">
-              {highScore !== null ? highScore : "Chargement..."}
-            </span>
+            <span id='high-score'>{highScore !== null ? highScore : "Chargement..."}</span>
           </div>
           <div>
-            Score: <span id="score">0</span>
+            Score: <span id='score'>0</span>
           </div>
-          <p id="health">Vie: 3</p>
+          <p id='health'>Vie: 3</p>
           <div>
-            Points: <span id="points">0</span>
+            Points: <span id='points'>0</span>
           </div>
-          <button id="lottery-btn">🎰 Loterie (100 pts) (L)</button>
+          <button id='lottery-btn'>🎰 Loterie (100 pts) (L)</button>
         </div>
       </main>
-      <div id="boss-banner" className="hidden">
+      <div id='boss-banner' className='hidden'>
         ⚠️ Boss Approaching ⚠️
       </div>
     </div>

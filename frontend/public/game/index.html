@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Space Invaders Refactor</title>
+    <style>
+      canvas {
+        background: black;
+        display: block;
+        margin: 0 auto;
+      }
+      #ui {
+        text-align: center;
+        color: white;
+        font-family: monospace;
+        margin-top: 10px;
+      }
+      #message,
+      #boss-banner {
+        color: yellow;
+        font-size: 1.2em;
+        margin-top: 10px;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="game" width="800" height="600"></canvas>
+
+    <div id="ui">
+      <div>Score: <span id="score">0</span></div>
+      <div>Points: <span id="points">0</span></div>
+      <div id="health">Vie: 3</div>
+      <button id="lottery-btn">🎰 Loterie (100 pts) (L)</button>
+      <div id="message" class="hidden"></div>
+      <div id="boss-banner" class="hidden">👾 BOSS EN APPROCHE ! 👾</div>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>
