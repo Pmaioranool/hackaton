@@ -133,6 +133,9 @@ export default function Home() {
             pause
           </button>
         </div>
+        <div id="power-ups-container">
+          <h3>Power-Ups Actifs</h3>
+        </div>
       </main>
       <div id="boss-banner" className="hidden">
         ⚠️ Boss Approaching ⚠️

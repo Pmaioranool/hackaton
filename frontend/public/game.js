@@ -11,6 +11,7 @@ const bossMusic = new Audio("/asset/music/boss.mp3");
 const gameOverMusic = new Audio("/asset/music/gameover.mp3");
 const startButton = document.querySelector("#start-button");
 const pauseButton = document.querySelector("#pause-button");
+const powerUpsContainer = document.getElementById("power-ups-container");
 let isShopOpen = false;
 shootSound.volume = 0.3;
 
@@ -549,6 +550,7 @@ function update() {
       ) {
         if (player.shield) {
           player.shield = false; // Le bouclier absorbe le coup
+          removePowerUp("shield"); // enlève le bouclier à la liste des power-ups
         } else {
           player.health--;
           updateHealthUI(player.health);
@@ -768,6 +770,7 @@ function update() {
     ) {
       if (player.shield) {
         player.shield = false; // Le bouclier absorbe le coup
+        removePowerUp("shield"); // enlève le bouclier à la liste des power-ups
       } else {
         player.health--;
         updateHealthUI();
@@ -868,6 +871,7 @@ async function resetGame() {
   enemyBullets = [];
   player.powerups = [];
   player.rapidFire = false;
+
   player.shield = false;
   player.speed = player.baseSpeed;
   // Réinitialisation des multiplicateurs
@@ -1061,20 +1065,6 @@ window.addEventListener("keydown", (e) => {
 window.addEventListener("keyup", (e) => {
   keys[e.key] = false;
 });
-
-// Crée un conteneur pour les power-ups
-const powerUpsContainer = document.createElement("div");
-powerUpsContainer.id = "power-ups-container";
-powerUpsContainer.style.position = "absolute";
-powerUpsContainer.style.top = "10px";
-powerUpsContainer.style.right = "10px";
-powerUpsContainer.style.padding = "10px";
-powerUpsContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-powerUpsContainer.style.color = "white";
-powerUpsContainer.style.border = "1px solid white";
-powerUpsContainer.style.borderRadius = "5px";
-powerUpsContainer.style.fontFamily = "Arial, sans-serif";
-document.body.appendChild(powerUpsContainer);
 
 function removePowerUp(name) {
   player.powerups = player.powerups.filter((powerUp) => powerUp.name !== name);
