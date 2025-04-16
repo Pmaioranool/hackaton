@@ -334,7 +334,6 @@ function update() {
           player.health--;
           updateHealthUI(player.health);
           if (player.health <= 0) {
-            message("Game Over!");
             // Active gameOver au lieu d'appeler resetGame()
             gameOver = true;
           }
