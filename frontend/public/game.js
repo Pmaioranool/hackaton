@@ -237,19 +237,19 @@ function spawnEnemy() {
     type = "kamikaze";
     hp = 1;
     speed = 4 / 3;
-    width = height = 20;
+    width = height = 25;
     color = "orange";
   } else if (typeChance < (gunnerSpawnChance + kamikazeSpawnChance) / 10) {
     type = "gunner";
     hp = 2;
     speed = 2 / 3;
-    width = height = 10;
+    width = height = 25;
     color = "purple";
   } else {
     type = "tank";
     hp = 4;
     speed = 0.5;
-    width = height = 10;
+    width = height = 35;
     color = "darkblue";
   }
 
