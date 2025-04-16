@@ -8,6 +8,7 @@ const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
 const startButton = document.querySelector("#start-button");
 const pauseButton = document.querySelector("#pause-button");
+const backgroundMusic = new Audio("/asset/music/background.mp3");
 
 shootSound.volume = 0.3;
 
@@ -88,7 +89,7 @@ let player = {
 const defaultShootCooldown = 300;
 // On ajoute l'image du joueur pour remplacer le cube
 player.img = new Image();
-player.img.src = "sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
+player.img.src = "/asset/sprite/sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
 
 const bossImage = new Image();
 bossImage.src = "final-boss.webp"; // Mets le chemin correct ici si l'image est dans un sous-dossier
@@ -236,19 +237,19 @@ function spawnEnemy() {
     type = "kamikaze";
     hp = 1;
     speed = 4 / 3;
-    width = height = 30;
+    width = height = 50;
     color = "orange";
   } else if (typeChance < (gunnerSpawnChance + kamikazeSpawnChance) / 10) {
     type = "gunner";
     hp = 2;
     speed = 2 / 3;
-    width = height = 30;
+    width = height = 50;
     color = "purple";
   } else {
     type = "tank";
     hp = 4;
     speed = 0.5;
-    width = height = 40;
+    width = height = 60;
     color = "darkblue";
   }
 
@@ -572,8 +573,8 @@ function update() {
     if (boss.x <= 0 || boss.x + boss.width >= canvas.width)
       boss.direction *= -1;
 
-    if (boss.img) {
-      ctx.drawImage(bossImage, boss.x, boss.y, boss.width, boss.height);
+    if (boss.img && boss.img.complete) {
+      ctx.drawImage(boss.img, boss.x, boss.y, boss.width, boss.height);
     } else {
       drawRect(boss);
     }
