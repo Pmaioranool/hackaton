@@ -1,3 +1,5 @@
+
+
 // === CANVAS & UI ===
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -14,9 +16,9 @@ const pauseButton = document.querySelector("#pause-button");
 let isShopOpen = false;
 shootSound.volume = 0.3;
 
-backgroundMusic.volume = 0.5; // 50% du volume
-bossMusic.volume = 0.6;
-gameOverMusic.volume = 0.7;
+backgroundMusic.volume = 0.2; // 50% du volume
+bossMusic.volume = 0.3;
+gameOverMusic.volume = 0.3;
 
 // Configurer la lecture en boucle
 backgroundMusic.loop = true;
@@ -49,7 +51,7 @@ function message(text) {
 
 // variable correctif
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let baseEnemiesToKill = 100;
+let baseEnemiesToKill = 2;
 let enemiesToKill = baseEnemiesToKill;
 let laserCharge = 3000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
@@ -535,7 +537,7 @@ function update() {
     if (enemiesKilled >= enemiesToKill) {
       backgroundMusic.pause();
       bossMusic.currentTime = 0;
-      bossMusic.play();
+      bossMusic.play().catch(e => console.error("Erreur boss music:", e));
       showBossBanner();
       enemies = [];
       boss = {
@@ -803,15 +805,20 @@ const putUserScore = async (id, score) => {
 };
 
 async function resetGame() {
-  backgroundMusic.pause();
-bossMusic.pause();
-gameOverMusic.pause();
-
+ try {
+    await backgroundMusic.pause();
+    await bossMusic.pause();
+    await gameOverMusic.pause();
+    
+    if (!gameOver) {
+      backgroundMusic.currentTime = 0;
+      await backgroundMusic.play();
+    }
+  } catch (e) {
+    console.error("Erreur gestion audio:", e);
+  }
 // Jouer la musique de fond si le jeu n'est pas en Game Over
-if (!gameOver) {
-  backgroundMusic.currentTime = 0;
-  backgroundMusic.play();
-}
+
   if (!win) {
     const id = await getId();
     putUserScore(id, player.score); // Envoie le score au backend
@@ -902,9 +909,9 @@ function loop() {
   // Si Game Over, arrête toute mise à jour du jeu et affiche l'écran de fin
   if (gameOver) {
     backgroundMusic.pause();
-bossMusic.pause();
-gameOverMusic.currentTime = 0;
-gameOverMusic.play();
+    bossMusic.pause();
+    gameOverMusic.currentTime = 0;
+    gameOverMusic.play().catch(e => console.error("Erreur game over music:", e));
     ctx.save();
     ctx.fillStyle = "rgba(50,50,50,0.95)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1134,7 +1141,18 @@ const hgScore = new Event("resetGame");
 window.dispatchEvent(hgScore); // initialise le highScore
 getId();
 updateHealthUI();
-
+startButton.addEventListener("click", async () => {
+  try {
+    await backgroundMusic.play(); // Doit être déclenché par une action utilisateur
+    startButton.remove();
+    pauseButton.classList.remove("hidden");
+    loop();
+  } catch (e) {
+    console.error("Erreur lecture musique:", e);
+    // Fallback si la musique ne peut pas jouer
+    loop();
+  }
+});
 startButton.addEventListener("click", () => {
   startButton.remove(); // Supprime le bouton après avoir cliqué
   pauseButton.classList.remove("hidden"); // Affiche le bouton de pause
