@@ -58,6 +58,10 @@ let player = {
   rapidFire: false,
   shield: false,
 };
+// On ajoute l'image du joueur pour remplacer le cube
+player.img = new Image();
+player.img.src = "bombardino-crocodilo.png"; // Remplace ce chemin par l'URL de ton image
+
 let bullets = [];
 let enemies = [];
 let enemyBullets = [];
@@ -222,7 +226,12 @@ function update() {
   if (keys["ArrowRight"] && player.x < canvas.width - player.width)
     player.x += player.speed;
 
-  drawRect(player);
+  // Au lieu de dessiner un cube pour le joueur, on affiche son image
+  if (player.img && player.img.complete) {
+    ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+  } else {
+    drawRect(player);
+  }
 
   if (player.shield) {
     ctx.strokeStyle = "cyan";
@@ -334,6 +343,7 @@ function update() {
           player.health--;
           updateHealthUI(player.health);
           if (player.health <= 0) {
+            message("Game Over!");
             // Active gameOver au lieu d'appeler resetGame()
             gameOver = true;
           }
@@ -365,7 +375,6 @@ function update() {
 
   // === BOSS ===
   if (boss) {
-    // Apparition des tourelles toutes les 30s
     if (Date.now() - lastTurretSpawnTime > turretSpawnInterval) {
       spawnTurrets();
       lastTurretSpawnTime = Date.now();
@@ -528,6 +537,7 @@ function update() {
         player.health--;
         updateHealthUI();
         if (player.health <= 0) {
+          message("Game Over!");
           // Active gameOver au lieu d'appeler resetGame()
           gameOver = true;
         }
@@ -636,7 +646,7 @@ function loop() {
   // Si Game Over, arrête toute mise à jour du jeu et affiche l'écran de fin
   if (gameOver) {
     ctx.save();
-    ctx.fillStyle = "rgba(80,20,50,0.95)";
+    ctx.fillStyle = "rgba(50,50,50,0.95)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "white";
     ctx.font = "bold 48px Arial";
