@@ -1165,11 +1165,9 @@ startButton.addEventListener("click", async () => {
     await backgroundMusic.play(); // Doit être déclenché par une action utilisateur
     startButton.remove();
     pauseButton.classList.remove("hidden");
-    loop();
   } catch (e) {
     console.error("Erreur lecture musique:", e);
     // Fallback si la musique ne peut pas jouer
-    loop();
   }
 });
 startButton.addEventListener("click", () => {
