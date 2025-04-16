@@ -99,7 +99,7 @@ let player = {
   baseDamage: 1,
   speed: 4,
   baseSpeed: 4,
-  points: 0,
+  points: 100000,
   score: 0,
   scoreMultiplier: 1,
   baseScoreMultiplier: 1,
@@ -110,6 +110,7 @@ let player = {
   shield: false,
   bossCoins: 0,
   baseCannon: 1,
+  powerups: [],
 };
 
 const defaultShootCooldown = 300;
@@ -852,7 +853,7 @@ async function resetGame() {
     if (spawnInterval > minSpawnInterval)
       spawnInterval = 2000 - bossBeaten * 200; // Réduction de l'intervalle de spawn des ennemis
     enemiesToKill = baseEnemiesToKill + bossBeaten + 10;
-    bossHp = bossHPMax + bossBeaten * 100; // Augmente la vie du boss à chaque victoire
+    bossHP = bossHPMax + bossBeaten * 100; // Augmente la vie du boss à chaque victoire
   }
 
   player.health = player.maxHealth;
@@ -1055,6 +1056,51 @@ window.addEventListener("keyup", (e) => {
   keys[e.key] = false;
 });
 
+// Crée un conteneur pour les power-ups
+const powerUpsContainer = document.createElement("div");
+powerUpsContainer.id = "power-ups-container";
+powerUpsContainer.style.position = "absolute";
+powerUpsContainer.style.top = "10px";
+powerUpsContainer.style.right = "10px";
+powerUpsContainer.style.padding = "10px";
+powerUpsContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+powerUpsContainer.style.color = "white";
+powerUpsContainer.style.border = "1px solid white";
+powerUpsContainer.style.borderRadius = "5px";
+powerUpsContainer.style.fontFamily = "Arial, sans-serif";
+document.body.appendChild(powerUpsContainer);
+
+function removePowerUp(name) {
+  player.powerups = player.powerups.filter((powerUp) => powerUp.name !== name);
+  updatePowerUpsUI();
+}
+
+setInterval(() => {
+  if (Array.isArray(player.powerups)) {
+    player.powerups = player.powerups.filter(
+      (powerUp) => powerUp.endTime > Date.now() || powerUp.name === "shield"
+    );
+    updatePowerUpsUI();
+  }
+}, 1000);
+
+function updatePowerUpsUI() {
+  powerUpsContainer.innerHTML = "<h3>Power-Ups Actifs</h3>";
+
+  if (player.powerups.length === 0) {
+    powerUpsContainer.innerHTML += "<p>Aucun power-up actif</p>";
+    return;
+  }
+
+  player.powerups.forEach((powerUp) => {
+    const powerUpElement = document.createElement("div");
+    powerUpElement.textContent = `${powerUp.name} - ${Math.ceil(
+      (powerUp.endTime - Date.now()) / 1000
+    )}s`;
+    powerUpsContainer.appendChild(powerUpElement);
+  });
+}
+
 // === LOTTERY ===
 const lotteryRoll = () => {
   if (isShopOpen) return;
@@ -1101,58 +1147,79 @@ function pickPowerUp() {
 }
 
 function applyPowerUp(power) {
+  const duration = {
+    double_shot: laps_double_shot,
+    speed_up: laps_speed_up,
+    shield: Infinity, // Bouclier reste actif jusqu'à absorption
+    rapid_fire: laps_rapid_fire,
+    heal: 0, // Pas de durée pour la guérison
+    damage_bonus: laps_damage_bonus,
+    score_x2: laps_score_x2,
+  };
+
+  if (power === "heal") {
+    if (player.health < player.maxHealth) {
+      player.health++;
+      updateHealthUI();
+    } else {
+      message("Vie déjà au maximum !");
+      player.points += 50;
+    }
+    return;
+  }
+
+  if (power === "shield" && player.shield) {
+    message("Déjà un bouclier actif !");
+    player.points += 50;
+    return;
+  }
+
+  const endTime = Date.now() + (duration[power] || 0);
+
+  player.powerups.push({ name: power, endTime });
+
   switch (power) {
     case "double_shot":
-      player.extraCannons += 1; // Ajoute un canon supplémentaire
+      player.extraCannons += 1;
       setTimeout(() => {
-        player.extraCannons = Math.max(0, player.extraCannons - 1); // Réduit le nombre de canons après un délai
+        player.extraCannons = Math.max(0, player.extraCannons - 1);
+        removePowerUp("double_shot");
       }, laps_double_shot);
       break;
     case "speed_up":
       player.speed = player.baseSpeed + 3;
-      setTimeout(() => (player.speed = player.baseSpeed), laps_speed_up);
+      setTimeout(() => {
+        player.speed = player.baseSpeed;
+        removePowerUp("speed_up");
+      }, laps_speed_up);
       break;
     case "shield":
-      if (!player.shield) {
-        message("deja un shield");
-        player.points += 50;
-        break;
-      }
       player.shield = true;
       break;
     case "rapid_fire":
       player.rapidFire = true;
-      setTimeout(() => (player.rapidFire = false), laps_rapid_fire);
+      setTimeout(() => {
+        player.rapidFire = false;
+        removePowerUp("rapid_fire");
+      }, laps_rapid_fire);
       break;
-    case "heal":
-      if (player.health < player.maxHealth) {
-        // Utilise player.health (la propriété de la vie actuelle) pour l'incrément
-        player.health++;
-        updateHealthUI();
-      } else {
-        message("Vie déjà au maximum !");
-        player.points += 50; // Bonus de 10 points si la vie est déjà au max
-      }
+    case "damage_bonus":
+      player.damage *= 2;
+      setTimeout(() => {
+        player.damage /= 2;
+        removePowerUp("damage_bonus");
+      }, laps_damage_bonus);
       break;
-    case "damage_bonus": // Applique un multiplicateur de dégâts x2 pendant 10 sec.
-      player.damage = player.damage * 2;
-      setTimeout(() => (player.damage = player.damage / 2), laps_damage_bonus);
-      break;
-    case "score_x2": // Applique un multiplicateur de score x2 pendant 10 sec.
-      if (player.scoreMultiplier === 32) {
-        message("Déjà x32 !");
-        player.points += 50; // Bonus de 10 points si le multiplicateur est déjà au max
-        return;
-      }
-      player.scoreMultiplier = player.scoreMultiplier * 2;
-      setTimeout(
-        () => (player.scoreMultiplier = player.scoreMultiplier / 2),
-        laps_score_x2
-      );
-      setTimeout(updateUI(player.score, player.points), laps_score_x2);
-      updateUI(player.score, player.points);
+    case "score_x2":
+      player.scoreMultiplier *= 2;
+      setTimeout(() => {
+        player.scoreMultiplier /= 2;
+        removePowerUp("score_x2");
+      }, laps_score_x2);
       break;
   }
+
+  updatePowerUpsUI();
 }
 
 // === Démarre le jeu ===
