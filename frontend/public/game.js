@@ -576,12 +576,10 @@ const getId = async () => {
 };
 
 const putUserScore = async (id, score) => {
-  console.log("id", id);
-  console.log("score", score);
   try {
-    await fetch(`http://localhost:5000/api/users/newScore/${id}`, {
+    await fetch(`http://localhost:5000/api/users/newScore/`, {
       method: "put",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", id: id },
       body: JSON.stringify({ score: score }),
     });
   } catch (error) {
@@ -770,7 +768,7 @@ lotteryBtn.addEventListener("click", () => {
 });
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "l") {
+  if (e.key === "e") {
     e.preventDefault(); // Empêche le comportement par défaut de la touche "L"
     lotteryRoll();
   }
@@ -834,5 +832,7 @@ function applyPowerUp(power) {
 }
 
 // === Démarre le jeu ===
+const hgScore = new Event("resetGame");
+window.dispatchEvent(hgScore); // initialise le highScore
 updateHealthUI();
 loop();

@@ -64,8 +64,8 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
-  const { id } = req.params;
+router.delete("/", async (req, res) => {
+  const { id } = req.headers;
   try {
     const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser) {
@@ -77,8 +77,8 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
-  const { id } = req.params;
+router.put("/", async (req, res) => {
+  const { id } = req.headers;
   try {
     const putUser = await User.findOneAndUpdate(
       { _id: id },
@@ -91,8 +91,8 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.put("/newScore/:id", async (req, res) => {
-  const { id } = req.params;
+router.put("/newScore/", async (req, res) => {
+  const { id } = req.headers;
   const { score } = req.body;
 
   oldScore = await User.findById(id).then((user) => {
@@ -114,8 +114,8 @@ router.put("/newScore/:id", async (req, res) => {
 });
 
 // Route pour récupérer un utilisateur par ID
-router.get("/one/:id", async (req, res) => {
-  const { id } = req.params;
+router.get("/one", async (req, res) => {
+  const { id } = req.headers;
   try {
     const user = await User.findById(id);
     if (!user) {

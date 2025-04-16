@@ -48,11 +48,12 @@ export default function Home() {
           if (response.ok) {
             const userId = data.id;
             const userResponse = await fetch(
-              `http://localhost:5000/api/users/${userId}`,
+              `http://localhost:5000/api/users/one`,
               {
                 method: "GET",
                 headers: {
                   "Content-Type": "application/json",
+                  id: userId,
                 },
               }
             );
@@ -89,7 +90,7 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <>
       <span id="message" className="hidden"></span>
       <nav>
         <ul>
@@ -126,6 +127,6 @@ export default function Home() {
       <div id="boss-banner" className="hidden">
         ⚠️ Boss Approaching ⚠️
       </div>
-    </div>
+    </>
   );
 }
