@@ -1,5 +1,3 @@
-
-
 // === CANVAS & UI ===
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -35,7 +33,8 @@ enemyImages.kamikaze.src = "/asset/sprite/enemy_kamikaze.png";
 enemyImages.gunner.src = "/asset/sprite/enemy_gunner.png";
 enemyImages.tank.src = "/asset/sprite/enemy_tank.png";
 enemyImages.boss.src = "/asset/sprite/boss.png";
-enemyImages.kamikaze.onerror = () => console.error("Failed to load kamikaze image");
+enemyImages.kamikaze.onerror = () =>
+  console.error("Failed to load kamikaze image");
 enemyImages.gunner.onerror = () => console.error("Failed to load gunner image");
 
 function message(text) {
@@ -297,7 +296,7 @@ function spawnEnemy() {
     shootCooldown: Math.random() * 1000 + 1000, // 1s à 3s,
     lastShootTime: Date.now(),
     pattern, // le pattern de mouvement attribué
-    img: enemyImages[type]
+    img: enemyImages[type],
   };
 
   // Propriétés spécifiques selon le pattern attribué
@@ -461,21 +460,39 @@ function update() {
       switch (enemy.type) {
         case "tank":
           if (enemy.img && enemy.img.complete) {
-            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+            ctx.drawImage(
+              enemy.img,
+              enemy.x,
+              enemy.y,
+              enemy.width,
+              enemy.height
+            );
           } else {
             drawCircle(enemy);
           }
           break;
         case "kamikaze":
           if (enemy.img && enemy.img.complete) {
-            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+            ctx.drawImage(
+              enemy.img,
+              enemy.x,
+              enemy.y,
+              enemy.width,
+              enemy.height
+            );
           } else {
             drawRect(enemy);
           }
           break;
         case "gunner":
           if (enemy.img && enemy.img.complete) {
-            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+            ctx.drawImage(
+              enemy.img,
+              enemy.x,
+              enemy.y,
+              enemy.width,
+              enemy.height
+            );
           } else {
             drawTriangle(enemy);
           }
@@ -537,7 +554,7 @@ function update() {
     if (enemiesKilled >= enemiesToKill) {
       backgroundMusic.pause();
       bossMusic.currentTime = 0;
-      bossMusic.play().catch(e => console.error("Erreur boss music:", e));
+      bossMusic.play().catch((e) => console.error("Erreur boss music:", e));
       showBossBanner();
       enemies = [];
       boss = {
@@ -553,7 +570,7 @@ function update() {
         lastLaserTime: 0,
         laserCharging: false,
         laserChargeStart: 0,
-        img: enemyImages.boss 
+        img: enemyImages.boss,
       };
     }
   }
@@ -805,11 +822,11 @@ const putUserScore = async (id, score) => {
 };
 
 async function resetGame() {
- try {
+  try {
     await backgroundMusic.pause();
     await bossMusic.pause();
     await gameOverMusic.pause();
-    
+
     if (!gameOver) {
       backgroundMusic.currentTime = 0;
       await backgroundMusic.play();
@@ -817,7 +834,7 @@ async function resetGame() {
   } catch (e) {
     console.error("Erreur gestion audio:", e);
   }
-// Jouer la musique de fond si le jeu n'est pas en Game Over
+  // Jouer la musique de fond si le jeu n'est pas en Game Over
 
   if (!win) {
     const id = await getId();
@@ -911,7 +928,9 @@ function loop() {
     backgroundMusic.pause();
     bossMusic.pause();
     gameOverMusic.currentTime = 0;
-    gameOverMusic.play().catch(e => console.error("Erreur game over music:", e));
+    gameOverMusic
+      .play()
+      .catch((e) => console.error("Erreur game over music:", e));
     ctx.save();
     ctx.fillStyle = "rgba(50,50,50,0.95)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1166,6 +1185,11 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "Escape" && !isShopOpen) {
     isPaused = !isPaused; // Inverse l'état de pause
     pauseButton.textContent = isPaused ? "Reprendre" : "Pause"; // Change le texte du bouton
+    if (boss) {
+      bossMusic[isPaused ? "pause" : "play"](); // Met en pause ou reprend la musique de boss
+    } else {
+      backgroundMusic[isPaused ? "pause" : "play"](); // Met en pause ou reprend la musique de fond
+    }
   }
 });
 
@@ -1174,4 +1198,9 @@ pauseButton.addEventListener("click", () => {
   if (isShopOpen) return; // Ne pas changer l'état si la boutique est ouverte
   isPaused = !isPaused; // Inverse l'état de pause
   pauseButton.textContent = isPaused ? "Reprendre" : "Pause"; // Change le texte du bouton
+  if (boss) {
+    bossMusic[isPaused ? "pause" : "play"](); // Met en pause ou reprend la musique de boss
+  } else {
+    backgroundMusic[isPaused ? "pause" : "play"](); // Met en pause ou reprend la musique de fond
+  }
 });
