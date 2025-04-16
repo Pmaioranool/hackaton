@@ -27,7 +27,7 @@ let laserCharge = 1000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
 let bossHP = 300;
 let spawnTimer = 0;
-let spawnInterval = 2000; // entre 1 et 3 secondes
+let spawnInterval = 2000;
 let spawnAccelerationTimer = 0;
 const minSpawnInterval = 400;
 let kamikazeSpawnChance = 6; // 6/10 de chance de spawn un kamikaze
@@ -68,7 +68,7 @@ let player = {
   baseDamage: 1, // Ajout du multiplicateur de dégâts (1 = normal, 2 = x2 damage)
   speed: 4,
   baseSpeed: 4,
-  points: 100000,
+  points: 0,
   score: 0,
   scoreMultiplier: 1, // Multiplicateur de score};
   baseScoreMultiplier: 1, // Ajout du multiplicateur de score (1 = normal, 2 = x2 score)
@@ -588,13 +588,13 @@ function update() {
 
   // === SPAWN ===
   if (!boss) {
-    spawnTimer += 16;
-    spawnAccelerationTimer += 16;
+    spawnTimer += 8;
+    spawnAccelerationTimer += 8;
     if (spawnTimer >= spawnInterval) {
       spawnEnemy();
       spawnTimer = 0;
     }
-    if (spawnAccelerationTimer >= 10000) {
+    if (spawnAccelerationTimer >= 20000) {
       if (spawnInterval > minSpawnInterval) spawnInterval -= 100;
       spawnAccelerationTimer = 0;
     }
@@ -641,7 +641,7 @@ async function resetGame() {
     player.points = 0;
     spawnInterval = 2000;
     bossBeaten = 0; // Réinitialise le nombre de boss battus
-    enemiesToKill = 1; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
+    enemiesToKill = 100; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
   } else {
     player.points += 100; // Bonus de points pour avoir battu le boss
     if (spawnInterval > minSpawnInterval)
@@ -849,7 +849,7 @@ lotteryBtn.addEventListener("click", () => {
 });
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "e") {
+  if (e.code === "KeyE") {
     e.preventDefault(); // Empêche le comportement par défaut de la touche "L"
     lotteryRoll();
   }
