@@ -9,7 +9,7 @@ const shootSound = new Audio("shoot.mp3");
 const startButton = document.querySelector("#start-button");
 const pauseButton = document.querySelector("#pause-button");
 const backgroundMusic = new Audio("/asset/music/background.mp3");
-
+let isShopOpen = false;
 shootSound.volume = 0.3;
 
 backgroundMusic.loop = true;
@@ -38,11 +38,12 @@ function message(text) {
 
 // variable correctif
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let baseEnemiesToKill = 50;
+let baseEnemiesToKill = 100;
 let enemiesToKill = baseEnemiesToKill;
 let laserCharge = 3000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
 let bossHP = 200;
+let bossHPMax = 200;
 let spawnTimer = 0;
 let spawnInterval = 2000;
 let spawnAccelerationTimer = 0;
@@ -95,7 +96,7 @@ let player = {
   extraCannons: 0, // Nouveau : nombre de canons supplémentaires
   rapidFire: false,
   shield: false,
-  bossCoins: 1000,
+  bossCoins: 0,
   baseCannon: 1,
 };
 
@@ -108,6 +109,7 @@ const bossImage = new Image();
 bossImage.src = "/asset/boss.png";
 
 function createShop(bossCoins) {
+  isShopOpen = true; // Ouvre la boutique
   isPaused = true; // Met le jeu en pause
 
   // Conteneur principal de la boutique
@@ -170,7 +172,6 @@ function createShop(bossCoins) {
   });
 
   shopContainer.appendChild(itemsList);
-
   // Ajoute la boutique au document
   document.body.appendChild(shopContainer);
 }
@@ -205,6 +206,7 @@ function handlePurchase(item, bossCoinsDisplay, shopContainer) {
       }
       shopContainer.remove(); // Supprime la boutique après l'achat
       isPaused = false; // Reprend le jeu
+      isShopOpen = false; // Ferme la boutique
     }
   } else {
     message("Vous n'avez pas assez de BossCoins !");
@@ -788,8 +790,9 @@ async function resetGame() {
     createShop(player.bossCoins);
     player.points += 100; // Bonus de points pour avoir battu le boss
     if (spawnInterval > minSpawnInterval)
-      spawnInterval = 2000 - bossBeaten * 100; // Réduction de l'intervalle de spawn des ennemis
+      spawnInterval = 2000 - bossBeaten * 200; // Réduction de l'intervalle de spawn des ennemis
     enemiesToKill = baseEnemiesToKill + bossBeaten + 10;
+    bossHp = bossHPMax + bossBeaten * 100; // Augmente la vie du boss à chaque victoire
   }
 
   player.health = player.maxHealth;
@@ -900,35 +903,37 @@ function loop() {
     shootSound.play();
 
     // Tir principal
-    bullets.push({
-      x: player.x + player.width / 2 - 2,
-      y: player.y,
-      width: 4,
-      height: 10,
-      color: "white",
-      speed: 7,
-    });
-
-    // Ajout des canons supplémentaires
-    for (let i = 1; i <= player.extraCannons; i++) {
-      bullets.push(
-        {
-          x: player.x + player.width / 2 - 10 - i * 10, // Décalage à gauche
-          y: player.y,
-          width: 4,
-          height: 10,
-          color: "white",
-          speed: 7,
-        },
-        {
-          x: player.x + player.width / 2 + 6 + i * 10, // Décalage à droite
-          y: player.y,
-          width: 4,
-          height: 10,
-          color: "white",
-          speed: 7,
-        }
-      );
+    if (player.extraCannons < 1) {
+      bullets.push({
+        x: player.x + player.width / 2 - 2,
+        y: player.y,
+        width: 4,
+        height: 10,
+        color: "white",
+        speed: 7,
+      });
+    } else {
+      // Ajout des canons supplémentaires
+      for (let i = 1; i <= player.extraCannons; i++) {
+        bullets.push(
+          {
+            x: player.x + player.width / 2 + 10 - i * 20, // Décalage à gauche
+            y: player.y,
+            width: 4,
+            height: 10,
+            color: "white",
+            speed: 7,
+          },
+          {
+            x: player.x + player.width / 2 - 10 + i * 20, // Décalage à droite
+            y: player.y,
+            width: 4,
+            height: 10,
+            color: "white",
+            speed: 7,
+          }
+        );
+      }
     }
   }
 
@@ -986,6 +991,7 @@ window.addEventListener("keyup", (e) => {
 
 // === LOTTERY ===
 const lotteryRoll = () => {
+  if (isShopOpen) return;
   if (player.points >= pointToGamble) {
     player.points -= pointToGamble;
     const reward = pickPowerUp();
@@ -1099,7 +1105,7 @@ let isPaused = false;
 
 // Gestion de la pause avec la touche "Escape"
 window.addEventListener("keydown", (e) => {
-  if (e.code === "Escape") {
+  if (e.code === "Escape" && !isShopOpen) {
     isPaused = !isPaused; // Inverse l'état de pause
     pauseButton.textContent = isPaused ? "Reprendre" : "Pause"; // Change le texte du bouton
   }
@@ -1107,6 +1113,7 @@ window.addEventListener("keydown", (e) => {
 
 // Gestionnaire d'événement pour le bouton Pause
 pauseButton.addEventListener("click", () => {
+  if (isShopOpen) return; // Ne pas changer l'état si la boutique est ouverte
   isPaused = !isPaused; // Inverse l'état de pause
   pauseButton.textContent = isPaused ? "Reprendre" : "Pause"; // Change le texte du bouton
 });
