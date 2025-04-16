@@ -132,6 +132,7 @@ export default function Home() {
           <button class="hidden" id="pause-button">
             pause
           </button>
+          <button id="spriteSelector">change sprite</button>
         </div>
         <div id="power-ups-container">
           <h3>Power-Ups Actifs</h3>

@@ -12,6 +12,7 @@ const gameOverMusic = new Audio("/asset/music/gameover.mp3");
 const startButton = document.querySelector("#start-button");
 const pauseButton = document.querySelector("#pause-button");
 const powerUpsContainer = document.getElementById("power-ups-container");
+const spriteSelector = document.querySelector("#spriteSelector");
 let isShopOpen = false;
 shootSound.volume = 0.3;
 
@@ -29,15 +30,6 @@ const enemyImages = {
   boss: new Image(),
 };
 
-// Configuration des sources des images
-enemyImages.kamikaze.src = "/asset/sprite/kamikaze.png";
-enemyImages.gunner.src = "/asset/sprite/tireur.png";
-enemyImages.tank.src = "/asset/sprite/tank.png";
-enemyImages.boss.src = "/asset/sprite/boss.png";
-enemyImages.kamikaze.onerror = () =>
-  console.error("Failed to load kamikaze image");
-enemyImages.gunner.onerror = () => console.error("Failed to load gunner image");
-
 function message(text) {
   const messageEl = document.getElementById("message");
   messageEl.classList.remove("hidden");
@@ -50,21 +42,31 @@ function message(text) {
 }
 
 // variable correctif
+// boss variables
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let baseEnemiesToKill = 1002;
+let baseEnemiesToKill = 100; // enemies a tuer pour spawn un boss
 let enemiesToKill = baseEnemiesToKill;
 let laserCharge = 3000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
 let bossHP = 200;
 let bossHPMax = 200;
+let win = false;
+let bossBeaten = 0; // Nombre de boss battus
+
+// enemies variables
 let spawnTimer = 0;
 let spawnInterval = 2000;
 let spawnAccelerationTimer = 0;
 const minSpawnInterval = 400;
-let kamikazeSpawnChance = 6; // 6/10 de chance de spawn un kamikaze
+let tankBaseHP = 4;
+let gunnerBaseHP = 2;
 let gunnerSpawnChance = 3; // 3/10 de chance de spawn un gunner
-let pointToGamble = 50;
+let kamikazeSpawnChance = 6; // 6/10 de chance de spawn un kamikaze
+let kamikazeBasezHP = 1;
 // les tank sont le reste des  chance de spawn (1/10)
+
+// loterie variable
+let pointToGamble = 50;
 
 let chance_double_shot = 0.5;
 let laps_double_shot = 7000;
@@ -86,9 +88,6 @@ let laps_shield = 10000;
 let chance_score_x2 = 2; // Applique un multiplicateur de score x2 pendant 10 sec.
 let laps_score_x2 = 3000;
 
-let win = false;
-let bossBeaten = 0; // Nombre de boss battus
-
 // === PLAYER SETUP ===
 let player = {
   x: canvas.width / 2 - 15,
@@ -100,7 +99,7 @@ let player = {
   baseDamage: 1,
   speed: 4,
   baseSpeed: 4,
-  points: 100000,
+  points: 0,
   score: 0,
   scoreMultiplier: 1,
   baseScoreMultiplier: 1,
@@ -117,11 +116,34 @@ let player = {
 const defaultShootCooldown = 300;
 // On ajoute l'image du joueur pour remplacer le cube
 player.img = new Image();
-player.img.src = "/asset/sprite/perso.png"; // Remplace ce chemin par l'URL de ton image
 
 enemyImages.boss = new Image();
-enemyImages.boss.src = "/asset/sprite/boss.png";
-enemyImages.boss.onerror = () => console.error("Failed to load boss image");
+
+let chooseSprite = "lucas";
+
+spriteSelector.addEventListener("click", () => {
+  // Alterne entre "lucas" et "leo"
+  chooseSprite = chooseSprite === "lucas" ? "leo" : "lucas";
+
+  // Met à jour l'image du joueur
+
+  // Affiche un message pour confirmer le changement
+  message(`Sprite changé en ${chooseSprite} !`);
+  player.img.src = `/asset/sprite/${chooseSprite}/perso.png`; // Remplace ce chemin par l'URL de ton image
+  enemyImages.boss.src = `/asset/sprite/${chooseSprite}/boss.png`;
+  enemyImages.kamikaze.src = `/asset/sprite/${chooseSprite}/kamikaze.png`;
+  enemyImages.gunner.src = `/asset/sprite/${chooseSprite}/tireur.png`;
+  enemyImages.tank.src = `/asset/sprite/${chooseSprite}/tank.png`;
+  enemyImages.boss.src = `/asset/sprite/${chooseSprite}/boss.png`;
+});
+// Configuration des sources des images
+player.img.src = `/asset/sprite/${chooseSprite}/perso.png`; // Remplace ce chemin par l'URL de ton image
+enemyImages.boss.src = `/asset/sprite/${chooseSprite}/boss.png`;
+enemyImages.kamikaze.src = `/asset/sprite/${chooseSprite}/kamikaze.png`;
+enemyImages.gunner.src = `/asset/sprite/${chooseSprite}/tireur.png`;
+enemyImages.tank.src = `/asset/sprite/${chooseSprite}/tank.png`;
+enemyImages.boss.src = `/asset/sprite/${chooseSprite}/boss.png`;
+
 function createShop(bossCoins) {
   isShopOpen = true; // Ouvre la boutique
   isPaused = true; // Met le jeu en pause
@@ -264,19 +286,19 @@ function spawnEnemy() {
 
   if (typeChance < kamikazeSpawnChance / 10) {
     type = "kamikaze";
-    hp = 1;
+    hp = kamikazeBasezHP;
     speed = 4 / 3;
     width = height = 25;
     color = "orange";
   } else if (typeChance < (gunnerSpawnChance + kamikazeSpawnChance) / 10) {
     type = "gunner";
-    hp = 2;
+    hp = gunnerBaseHP;
     speed = 2 / 3;
     width = height = 25;
     color = "purple";
   } else {
     type = "tank";
-    hp = 4;
+    hp = tankBaseHP;
     speed = 0.5;
     width = height = 35;
     color = "darkblue";
@@ -863,6 +885,11 @@ async function resetGame() {
       spawnInterval = 2000 - bossBeaten * 200; // Réduction de l'intervalle de spawn des ennemis
     enemiesToKill = baseEnemiesToKill + bossBeaten + 10;
     bossHP = bossHPMax + bossBeaten * 100; // Augmente la vie du boss à chaque victoire
+    if (bossBeaten % 4 === 0) {
+      tankBaseHP += 1;
+      gunnerBaseHP += 1;
+      kamikazeBasezHP += 1;
+    }
   }
 
   player.health = player.maxHealth;
