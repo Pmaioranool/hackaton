@@ -76,6 +76,8 @@ const rapidFireCooldown = 50;
 
 let enemiesKilled = 0;
 
+let gameOver = false; // Ajout de la variable de gestion du Game Over
+
 // === SPAWN ENNEMIS ===
 function spawnEnemy() {
   const typeChance = Math.random();
@@ -314,7 +316,7 @@ function update() {
             player.score += 100 * player.scoreMultiplier; // Application du multiplicateur de score
             player.points += 10;
             enemiesKilled++;
-            updateUI();
+            updateUI(player.score, player.points);
           }
         }
       });
@@ -330,10 +332,11 @@ function update() {
           player.shield = false; // Le bouclier absorbe le coup
         } else {
           player.health--;
-          updateHealthUI();
+          updateHealthUI(player.health);
           if (player.health <= 0) {
             message("Game Over!");
-            resetGame();
+            // Active gameOver au lieu d'appeler resetGame()
+            gameOver = true;
           }
         }
         enemies.splice(ei, 1);
@@ -464,7 +467,8 @@ function update() {
         player.x + player.width > bossLaser.x
       ) {
         message("Touché par le laser ! Game Over!");
-        resetGame();
+        // Active gameOver au lieu d'appeler resetGame()
+        gameOver = true;
         bossLaser = null;
         return;
       }
@@ -486,7 +490,7 @@ function update() {
       boss.lastTorpedoTime = Date.now();
     }
 
-    // Dégâts du joueur au boss
+    // Dégâts du joueur sur le boss
     bullets.forEach((bullet, bi) => {
       if (
         bullet.x < boss.x + boss.width &&
@@ -526,7 +530,8 @@ function update() {
         updateHealthUI();
         if (player.health <= 0) {
           message("Game Over!");
-          resetGame();
+          // Active gameOver au lieu d'appeler resetGame()
+          gameOver = true;
         }
       }
       enemyBullets.splice(bi, 1);
@@ -616,8 +621,8 @@ async function resetGame() {
   bossLaser = null;
   enemiesKilled = 0;
   win = false;
-  updateUI();
-  updateHealthUI();
+  updateUI(player.score, player.points);
+  updateHealthUI(player.health);
   const event = new Event("resetGame");
   window.dispatchEvent(event);
 }
@@ -632,13 +637,33 @@ function updateHealthUI() {
 }
 
 function loop() {
+  // Si Game Over, arrête toute mise à jour du jeu et affiche l'écran de fin
+  if (gameOver) {
+    ctx.save();
+    ctx.fillStyle = "rgba(50,50,50,0.95)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 48px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 80);
+    ctx.font = "20px Arial";
+    ctx.fillText("Appuie sur Entrée pour rejouer", canvas.width / 2, canvas.height / 2 + 20);
+    ctx.restore();
+
+    // Vérifie si Entrée est pressée pour redémarrer
+    if (keys["Enter"]) {
+      resetGame();
+      gameOver = false;
+    }
+    requestAnimationFrame(loop);
+    return;
+  }
+
   update();
 
-  // Tir automatique
+  // Tir automatique du joueur
   const now = Date.now();
-  const shootCooldown = player.rapidFire
-    ? rapidFireCooldown
-    : defaultShootCooldown;
+  const shootCooldown = player.rapidFire ? rapidFireCooldown : defaultShootCooldown;
   if (now - lastShotTime >= shootCooldown) {
     lastShotTime = now;
     shootSound.currentTime = 0;
@@ -722,7 +747,6 @@ window.addEventListener("keydown", (e) => {
   //   // }
   // }
 });
-
 window.addEventListener("keyup", (e) => {
   keys[e.key] = false;
 });
@@ -735,7 +759,7 @@ const lotteryRoll = () => {
     player.powerups.push(reward);
     message(`Tu as gagné : ${reward}`);
     applyPowerUp(reward);
-    updateUI();
+    updateUI(player.score, player.points);
   } else {
     message("Pas assez de points !");
   }
@@ -790,6 +814,7 @@ function applyPowerUp(power) {
       break;
     case "heal":
       if (player.health < player.maxHealth) {
+        // Utilise player.health (la propriété de la vie actuelle) pour l'incrément
         player.health++;
         updateHealthUI();
       } else {
