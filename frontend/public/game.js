@@ -10,7 +10,18 @@ const startButton = document.querySelector("#start-button");
 const pauseButton = document.querySelector("#pause-button");
 
 shootSound.volume = 0.3;
+const enemyImages = {
+  kamikaze: new Image(),
+  gunner: new Image(),
+  tank: new Image(),
+  boss: new Image()
+};
 
+// Configuration des sources des images
+enemyImages.kamikaze.src = "/asset/enemy_kamikaze.png";
+enemyImages.gunner.src = "/asset/enemy_gunner.png";
+enemyImages.tank.src = "/asset/enemy_tank.png";
+enemyImages.boss.src = "/asset/boss.png";
 function message(text) {
   const messageEl = document.getElementById("message");
   messageEl.classList.remove("hidden");
@@ -24,8 +35,8 @@ function message(text) {
 
 // variable correctif
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let enemiesToKill = 100;
-let laserCharge = 1000;
+let enemiesToKill = 1;
+let laserCharge = 5000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
 let bossHP = 300;
 let spawnTimer = 0;
@@ -85,10 +96,10 @@ let player = {
 const defaultShootCooldown = 300;
 // On ajoute l'image du joueur pour remplacer le cube
 player.img = new Image();
-player.img.src = "sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
+player.img.src = "/asset/sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
 
 const bossImage = new Image();
-bossImage.src = "final-boss.webp"; // Mets le chemin correct ici si l'image est dans un sous-dossier
+bossImage.src = "/asset/boss.png"; // Mets le chemin correct ici si l'image est dans un sous-dossier
 
 let bullets = [];
 let enemies = [];
@@ -117,19 +128,19 @@ function spawnEnemy() {
     type = "kamikaze";
     hp = 1;
     speed = 4 / 3;
-    width = height = 30;
+    width = height = 50;
     color = "orange";
   } else if (typeChance < (gunnerSpawnChance + kamikazeSpawnChance) / 10) {
     type = "gunner";
     hp = 2;
     speed = 2 / 3;
-    width = height = 30;
+    width = height = 50;
     color = "purple";
   } else {
     type = "tank";
     hp = 4;
     speed = 0.5;
-    width = height = 40;
+    width = height = 60;
     color = "darkblue";
   }
 
@@ -148,7 +159,8 @@ function spawnEnemy() {
     hp,
     shootCooldown: Math.random() * 1000 + 1000, // 1s à 3s,
     lastShootTime: Date.now(),
-    pattern, // le pattern de mouvement attribué
+    pattern,// le pattern de mouvement attribué
+    img: enemyImages[type] 
   };
 
   // Propriétés spécifiques selon le pattern attribué
@@ -312,13 +324,25 @@ function update() {
 
       switch (enemy.type) {
         case "tank":
-          drawCircle(enemy); // Dessine un cercle pour le tank
+          if (enemy.img && enemy.img.complete) {
+            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+          } else {
+            drawCircle(enemy);
+          }
           break;
         case "kamikaze":
-          drawRect(enemy); // Dessine un rectangle pour le kamikaze
+          if (enemy.img && enemy.img.complete) {
+            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+          } else {
+            drawRect(enemy);
+          }
           break;
         case "gunner":
-          drawTriangle(enemy);
+          if (enemy.img && enemy.img.complete) {
+            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+          } else {
+            drawTriangle(enemy);
+          }
           break;
       }
 
@@ -453,8 +477,8 @@ function update() {
     if (boss.x <= 0 || boss.x + boss.width >= canvas.width)
       boss.direction *= -1;
 
-    if (boss.img) {
-      ctx.drawImage(bossImage, boss.x, boss.y, boss.width, boss.height);
+    if (boss.img && boss.img.complete) {
+      ctx.drawImage(boss.img, boss.x, boss.y, boss.width, boss.height);
     } else {
       drawRect(boss);
     }
