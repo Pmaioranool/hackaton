@@ -27,7 +27,7 @@ function message(text) {
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
 let baseEnemiesToKill = 1;
 let enemiesToKill = baseEnemiesToKill;
-let laserCharge = 1000;
+let laserCharge = 3000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
 let bossHP = 1;
 let spawnTimer = 0;
@@ -237,19 +237,19 @@ function spawnEnemy() {
     type = "kamikaze";
     hp = 1;
     speed = 4 / 3;
-    width = height = 50;
+    width = height = 20;
     color = "orange";
   } else if (typeChance < (gunnerSpawnChance + kamikazeSpawnChance) / 10) {
     type = "gunner";
     hp = 2;
     speed = 2 / 3;
-    width = height = 50;
+    width = height = 10;
     color = "purple";
   } else {
     type = "tank";
     hp = 4;
     speed = 0.5;
-    width = height = 60;
+    width = height = 10;
     color = "darkblue";
   }
 
