@@ -524,8 +524,6 @@ function update() {
     }
 
     // Dégâts du joueur sur le boss
-    // Dégâts du joueur sur le boss
-    // Dégâts du joueur sur le boss
     bullets.forEach((bullet, bi) => {
       // Vérifie d'abord que le boss existe toujours
       if (!boss) return;
