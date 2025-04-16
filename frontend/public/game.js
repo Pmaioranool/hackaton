@@ -6,13 +6,21 @@ const pointsEl = document.getElementById("points");
 const healthEl = document.getElementById("health");
 const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
+const backgroundMusic = new Audio("/asset/music/background.mp3");
+const bossMusic = new Audio("/asset/music/boss.mp3");
+const gameOverMusic = new Audio("/asset/music/gameover.mp3");
 const startButton = document.querySelector("#start-button");
 const pauseButton = document.querySelector("#pause-button");
-const backgroundMusic = new Audio("/asset/music/background.mp3");
 let isShopOpen = false;
 shootSound.volume = 0.3;
 
+backgroundMusic.volume = 0.5; // 50% du volume
+bossMusic.volume = 0.6;
+gameOverMusic.volume = 0.7;
+
+// Configurer la lecture en boucle
 backgroundMusic.loop = true;
+bossMusic.loop = true;
 const enemyImages = {
   kamikaze: new Image(),
   gunner: new Image(),
@@ -21,10 +29,13 @@ const enemyImages = {
 };
 
 // Configuration des sources des images
-enemyImages.kamikaze.src = "/asset/enemy_kamikaze.png";
-enemyImages.gunner.src = "/asset/enemy_gunner.png";
-enemyImages.tank.src = "/asset/enemy_tank.png";
-enemyImages.boss.src = "/asset/boss.png";
+enemyImages.kamikaze.src = "/asset/sprite/enemy_kamikaze.png";
+enemyImages.gunner.src = "/asset/sprite/enemy_gunner.png";
+enemyImages.tank.src = "/asset/sprite/enemy_tank.png";
+enemyImages.boss.src = "/asset/sprite/boss.png";
+enemyImages.kamikaze.onerror = () => console.error("Failed to load kamikaze image");
+enemyImages.gunner.onerror = () => console.error("Failed to load gunner image");
+
 function message(text) {
   const messageEl = document.getElementById("message");
   messageEl.classList.remove("hidden");
@@ -105,9 +116,9 @@ const defaultShootCooldown = 300;
 player.img = new Image();
 player.img.src = "/asset/sprite/sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
 
-const bossImage = new Image();
-bossImage.src = "/asset/boss.png";
-
+enemyImages.boss = new Image();
+enemyImages.boss.src = "/asset/sprite/boss.png";
+enemyImages.boss.onerror = () => console.error("Failed to load boss image");
 function createShop(bossCoins) {
   isShopOpen = true; // Ouvre la boutique
   isPaused = true; // Met le jeu en pause
@@ -284,6 +295,7 @@ function spawnEnemy() {
     shootCooldown: Math.random() * 1000 + 1000, // 1s à 3s,
     lastShootTime: Date.now(),
     pattern, // le pattern de mouvement attribué
+    img: enemyImages[type]
   };
 
   // Propriétés spécifiques selon le pattern attribué
@@ -444,16 +456,27 @@ function update() {
         default:
           enemy.y += enemy.speed;
       }
-
       switch (enemy.type) {
         case "tank":
-          drawCircle(enemy); // Dessine un cercle pour le tank
+          if (enemy.img && enemy.img.complete) {
+            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+          } else {
+            drawCircle(enemy);
+          }
           break;
         case "kamikaze":
-          drawRect(enemy); // Dessine un rectangle pour le kamikaze
+          if (enemy.img && enemy.img.complete) {
+            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+          } else {
+            drawRect(enemy);
+          }
           break;
         case "gunner":
-          drawTriangle(enemy);
+          if (enemy.img && enemy.img.complete) {
+            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+          } else {
+            drawTriangle(enemy);
+          }
           break;
       }
 
@@ -510,6 +533,9 @@ function update() {
 
     // === LANCEMENT DU BOSS ===
     if (enemiesKilled >= enemiesToKill) {
+      backgroundMusic.pause();
+      bossMusic.currentTime = 0;
+      bossMusic.play();
       showBossBanner();
       enemies = [];
       boss = {
@@ -525,6 +551,7 @@ function update() {
         lastLaserTime: 0,
         laserCharging: false,
         laserChargeStart: 0,
+        img: enemyImages.boss 
       };
     }
   }
@@ -776,6 +803,15 @@ const putUserScore = async (id, score) => {
 };
 
 async function resetGame() {
+  backgroundMusic.pause();
+bossMusic.pause();
+gameOverMusic.pause();
+
+// Jouer la musique de fond si le jeu n'est pas en Game Over
+if (!gameOver) {
+  backgroundMusic.currentTime = 0;
+  backgroundMusic.play();
+}
   if (!win) {
     const id = await getId();
     putUserScore(id, player.score); // Envoie le score au backend
@@ -865,6 +901,10 @@ function loop() {
 
   // Si Game Over, arrête toute mise à jour du jeu et affiche l'écran de fin
   if (gameOver) {
+    backgroundMusic.pause();
+bossMusic.pause();
+gameOverMusic.currentTime = 0;
+gameOverMusic.play();
     ctx.save();
     ctx.fillStyle = "rgba(50,50,50,0.95)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
