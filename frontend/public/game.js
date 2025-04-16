@@ -62,6 +62,11 @@ let player = {
 player.img = new Image();
 player.img.src = "bombardino-crocodilo.png"; // Remplace ce chemin par l'URL de ton image
 
+const bossImage = new Image();
+bossImage.src = "final-boss.webp"; // Mets le chemin correct ici si l'image est dans un sous-dossier
+
+
+
 let bullets = [];
 let enemies = [];
 let enemyBullets = [];
@@ -432,7 +437,14 @@ function update() {
     if (boss.x <= 0 || boss.x + boss.width >= canvas.width)
       boss.direction *= -1;
 
-    drawRect(boss);
+    if (bossImage.complete) {
+      ctx.drawImage(bossImage, boss.x, boss.y, boss.width, boss.height);
+    } else {
+      bossImage.onload = () => {
+        ctx.drawImage(bossImage, boss.x, boss.y, boss.width, boss.height);
+      };
+    }
+    
 
     // === Laser ===
     if (
