@@ -6,13 +6,21 @@ const pointsEl = document.getElementById("points");
 const healthEl = document.getElementById("health");
 const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
+const backgroundMusic = new Audio("/asset/music/background.mp3");
+const bossMusic = new Audio("/asset/music/boss.mp3");
+const gameOverMusic = new Audio("/asset/music/gameover.mp3");
 const startButton = document.querySelector("#start-button");
 const pauseButton = document.querySelector("#pause-button");
-const backgroundMusic = new Audio("/asset/music/background.mp3");
 let isShopOpen = false;
 shootSound.volume = 0.3;
 
+backgroundMusic.volume = 0.5; // 50% du volume
+bossMusic.volume = 0.6;
+gameOverMusic.volume = 0.7;
+
+// Configurer la lecture en boucle
 backgroundMusic.loop = true;
+bossMusic.loop = true;
 const enemyImages = {
   kamikaze: new Image(),
   gunner: new Image(),
@@ -525,6 +533,9 @@ function update() {
 
     // === LANCEMENT DU BOSS ===
     if (enemiesKilled >= enemiesToKill) {
+      backgroundMusic.pause();
+      bossMusic.currentTime = 0;
+      bossMusic.play();
       showBossBanner();
       enemies = [];
       boss = {
@@ -792,6 +803,15 @@ const putUserScore = async (id, score) => {
 };
 
 async function resetGame() {
+  backgroundMusic.pause();
+bossMusic.pause();
+gameOverMusic.pause();
+
+// Jouer la musique de fond si le jeu n'est pas en Game Over
+if (!gameOver) {
+  backgroundMusic.currentTime = 0;
+  backgroundMusic.play();
+}
   if (!win) {
     const id = await getId();
     putUserScore(id, player.score); // Envoie le score au backend
@@ -881,6 +901,10 @@ function loop() {
 
   // Si Game Over, arrête toute mise à jour du jeu et affiche l'écran de fin
   if (gameOver) {
+    backgroundMusic.pause();
+bossMusic.pause();
+gameOverMusic.currentTime = 0;
+gameOverMusic.play();
     ctx.save();
     ctx.fillStyle = "rgba(50,50,50,0.95)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
