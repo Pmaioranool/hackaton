@@ -73,21 +73,21 @@ let chance_double_shot = 0.5;
 let laps_double_shot = 7000;
 
 let chance_rapid_fire = 0.5;
-let laps_rapid_fire = 2000;
+let laps_rapid_fire = 5000;
 const rapidFireCooldown = 100;
 
 let chance_damage_bonus = 0.5; // Applique un multiplicateur de dégâts x2 pendant 10 sec.
 let laps_damage_bonus = 7500;
 
 let chance_speed_up = 1;
-let laps_speed_up = 3000;
+let laps_speed_up = 4;
 
 let chance_heal = 2.5;
 let chance_shield = 3;
 let laps_shield = 10000;
 
 let chance_score_x2 = 2; // Applique un multiplicateur de score x2 pendant 10 sec.
-let laps_score_x2 = 3000;
+let laps_score_x2 = 10000;
 
 // === PLAYER SETUP ===
 let player = {
