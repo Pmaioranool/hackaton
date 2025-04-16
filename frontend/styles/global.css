@@ -108,3 +108,117 @@ button:hover {
 .hidden {
   display: none;
 }
+/* Styles pour la page de login, en gardant le même thème */
+
+/* Conteneur global du formulaire de connexion */
+.login-container {
+  background: linear-gradient(to bottom, #000000, #0a0a23);
+  padding: 2rem;
+  border: 2px solid #00ffcc;
+  border-radius: 10px;
+  box-shadow: 0 0 15px #00ffcc;
+  max-width: 400px;
+  width: 100%;
+  margin: auto;
+  text-align: center;
+}
+
+/* Titre */
+.login-container h1 {
+  margin-bottom: 1rem;
+  color: #00ffcc;
+}
+
+/* Lien pour créer un compte */
+.login-container a {
+  color: #00ffcc;
+  text-decoration: none;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+/* Champs de saisie */
+.login-container input[type="text"],
+.login-container input[type="password"] {
+  width: 94%;
+  padding: 10px;
+  margin: 10px 0;
+  background: #111;
+  border: 1px solid #00ffcc;
+  border-radius: 5px;
+  color: #00ffcc;
+  font-family: "Courier New", Courier, monospace;
+}
+
+/* Bouton de connexion */
+.login-container button {
+  width: 100%;
+  padding: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #0a0a23;
+  background: #00ffcc;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.3s;
+  box-shadow: 0 0 10px #00ffcc;
+}
+
+.login-container button:hover {
+  background: #00e6b8;
+  transform: scale(1.05);
+}
+/* Styles pour le formulaire de création de compte */
+.register-container {
+  background: linear-gradient(to bottom, #000000, #0a0a23);
+  padding: 2rem;
+  border: 2px solid #00ffcc;
+  border-radius: 10px;
+  box-shadow: 0 0 15px #00ffcc;
+  max-width: 400px;
+  width: 100%;
+  margin: auto;
+  text-align: center;
+}
+
+.register-container h1 {
+  margin-bottom: 1rem;
+  color: #00ffcc;
+}
+
+.register-container input[type="text"],
+.register-container input[type="password"] {
+  width: 94%;
+  padding: 10px;
+  margin: 10px 0;
+  background: #111;
+  border: 1px solid #00ffcc;
+  border-radius: 5px;
+  color: #00ffcc;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.register-container button {
+  width: 100%;
+  padding: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #0a0a23;
+  background: #00ffcc;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.3s;
+  box-shadow: 0 0 10px #00ffcc;
+}
+
+.register-container button:hover {
+  background: #00e6b8;
+  transform: scale(1.05);
+}
+
+.register-container .error {
+  color: red;
+  margin-top: 0.5rem;
+}

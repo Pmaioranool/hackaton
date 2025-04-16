@@ -37,31 +37,33 @@ export default function Register() {
   };
 
   return (
-    <form onSubmit={handleRegister}>
-      <h1>Créer un compte</h1>
-      <input
-        type="text"
-        placeholder="Nom d'utilisateur"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Mot de passe"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {loading ? (
-        <p>Inscription en cours...</p>
-      ) : (
-        <p>Veuillez entrer vos informations pour vous inscrire.</p>
-      )}
-      <button type="submit" disabled={loading}>
-        {loading ? "Chargement..." : "S'inscrire"}
-      </button>
-    </form>
+    <div className="register-container">
+      <form onSubmit={handleRegister}>
+        <h1>Créer un compte</h1>
+        <input
+          type="text"
+          placeholder="Nom d'utilisateur"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Mot de passe"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        {error && <p className="error">{error}</p>}
+        {loading ? (
+          <p>Inscription en cours...</p>
+        ) : (
+          <p>Veuillez entrer vos informations pour vous inscrire.</p>
+        )}
+        <button type="submit" disabled={loading}>
+          {loading ? "Chargement..." : "S'inscrire"}
+        </button>
+      </form>
+    </div>
   );
 }
