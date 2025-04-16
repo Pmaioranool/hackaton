@@ -50,7 +50,7 @@ function message(text) {
 
 // variable correctif
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let baseEnemiesToKill = 2;
+let baseEnemiesToKill = 1002;
 let enemiesToKill = baseEnemiesToKill;
 let laserCharge = 3000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
@@ -403,7 +403,13 @@ function update() {
 
   // Au lieu de dessiner un cube pour le joueur, on affiche son image
   if (player.img && player.img.complete) {
-    ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+    ctx.drawImage(
+      player.img,
+      player.x,
+      player.y,
+      player.width + 10,
+      player.height + 10
+    );
   } else {
     drawRect(player);
   }
@@ -465,8 +471,8 @@ function update() {
               enemy.img,
               enemy.x,
               enemy.y,
-              enemy.width,
-              enemy.height
+              enemy.width + 10,
+              enemy.height + 10
             );
           } else {
             drawCircle(enemy);
@@ -478,8 +484,8 @@ function update() {
               enemy.img,
               enemy.x,
               enemy.y,
-              enemy.width,
-              enemy.height
+              enemy.width + 10,
+              enemy.height + 10
             );
           } else {
             drawRect(enemy);
@@ -491,8 +497,8 @@ function update() {
               enemy.img,
               enemy.x,
               enemy.y,
-              enemy.width,
-              enemy.height
+              enemy.width + 10,
+              enemy.height + 10
             );
           } else {
             drawTriangle(enemy);
