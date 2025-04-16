@@ -121,7 +121,7 @@ export default function Home() {
           <div>
             Points: <span id="points">0</span>
           </div>
-          <button id="lottery-btn">🎰 Loterie (100 pts) (L)</button>
+          <button id="lottery-btn">🎰 Loterie (100 pts) (E)</button>
         </div>
       </main>
       <div id="boss-banner" className="hidden">
