@@ -95,13 +95,19 @@ export default function Home() {
       <nav>
         <ul>
           <li>
-            <a href="/logout">Logout</a>
+            <a className="nav-links" href="/logout">
+              Logout
+            </a>
           </li>
           <li>
-            <a href="/account">Account</a>
+            <a className="nav-links" href="/account">
+              Account
+            </a>
           </li>
           <li>
-            <a href="/leaderboard">Leaderboard</a>
+            <a className="nav-links" href="/leaderboard">
+              Leaderboard
+            </a>
           </li>
         </ul>
       </nav>
@@ -121,7 +127,7 @@ export default function Home() {
           <div>
             Points: <span id="points">0</span>
           </div>
-          <button id="lottery-btn">🎰 Loterie (100 pts) (E)</button>
+          <button id="lottery-btn">🎰 Loterie (100 pts) (L)</button>
         </div>
       </main>
       <div id="boss-banner" className="hidden">

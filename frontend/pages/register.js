@@ -40,6 +40,9 @@ export default function Register() {
     <div className="register-container">
       <form onSubmit={handleRegister}>
         <h1>Créer un compte</h1>
+        <a className="nav-links" href="/login">
+          se connecter
+        </a>
         <input
           type="text"
           placeholder="Nom d'utilisateur"

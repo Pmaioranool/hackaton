@@ -15,9 +15,9 @@ export default function Account() {
     try {
       const response = await fetch("http://localhost:5000/api/users/update", {
         method: "PUT",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` // Ajout du token dans les headers
+          Authorization: `Bearer ${token}`, // Ajout du token dans les headers
         },
         body: JSON.stringify({
           newUsername,
@@ -42,24 +42,29 @@ export default function Account() {
   };
 
   return (
-    <form onSubmit={handleUpdate}>
-      <h1>Modifier mes infos</h1>
-      <a href="/">Retour</a>
-      <br /><br />
-      <input
-        type="text"
-        placeholder="Nouveau pseudo"
-        value={newUsername}
-        onChange={(e) => setNewUsername(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Nouveau mot de passe"
-        value={newPassword}
-        onChange={(e) => setNewPassword(e.target.value)}
-      />
-      <button type="submit">Mettre à jour</button>
-      {message && <p>{message}</p>}
-    </form>
+    <div className="account-container">
+      <form onSubmit={handleUpdate}>
+        <h1>Modifier mes infos</h1>
+        <a href="/" className="account-back-link">
+          Retour
+        </a>
+        <br />
+        <br />
+        <input
+          type="text"
+          placeholder="Nouveau pseudo"
+          value={newUsername}
+          onChange={(e) => setNewUsername(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Nouveau mot de passe"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+        />
+        <button type="submit">Mettre à jour</button>
+        {message && <p>{message}</p>}
+      </form>
+    </div>
   );
 }

@@ -35,25 +35,29 @@ export default function LeaderBoard() {
   }, []);
 
   return (
-    <>
+    <div className="leaderboard-container">
       <h1>LeaderBoard</h1>
       <nav>
-        <a href="/">Retour au jeu</a>
-        <a href="/account">Account</a>
+        <a href="/" className="nav-links">
+          Retour au jeu
+        </a>
+        <a href="/account" className="nav-links">
+          Account
+        </a>
       </nav>
       <br />
       <div>
         {leaderboard.length > 0 ? (
           leaderboard.map((element, index) => (
-            <div key={index}>
-              <p>Nom d'utilisateur : {element.username}</p>
-              <p>Score : {element.score}</p>
+            <div className="leaderboard-entry" key={index}>
+              <p className="username">Nom d'utilisateur : {element.username}</p>
+              <p className="score">Score : {element.score}</p>
             </div>
           ))
         ) : (
           <p>Chargement du leaderboard...</p>
         )}
       </div>
-    </>
+    </div>
   );
 }

@@ -27,7 +27,9 @@ export default function Login() {
     <div className="login-container">
       <form onSubmit={handleLogin}>
         <h1>Connexion</h1>
-        <a href="/register">Créer un compte</a>
+        <a className="nav-links" href="/register">
+          Créer un compte
+        </a>
         <br />
         <br />
         <input
