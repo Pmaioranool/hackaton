@@ -69,7 +69,7 @@ let player = {
 };
 // On ajoute l'image du joueur pour remplacer le cube
 player.img = new Image();
-player.img.src = "bombardino-crocodilo.png"; // Remplace ce chemin par l'URL de ton image
+player.img.src = "sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
 
 const bossImage = new Image();
 bossImage.src = "final-boss.webp"; // Mets le chemin correct ici si l'image est dans un sous-dossier
