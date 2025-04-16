@@ -12,6 +12,19 @@ const backgroundMusic = new Audio("/asset/music/background.mp3");
 
 shootSound.volume = 0.3;
 
+backgroundMusic.loop = true;
+const enemyImages = {
+  kamikaze: new Image(),
+  gunner: new Image(),
+  tank: new Image(),
+  boss: new Image(),
+};
+
+// Configuration des sources des images
+enemyImages.kamikaze.src = "/asset/enemy_kamikaze.png";
+enemyImages.gunner.src = "/asset/enemy_gunner.png";
+enemyImages.tank.src = "/asset/enemy_tank.png";
+enemyImages.boss.src = "/asset/boss.png";
 function message(text) {
   const messageEl = document.getElementById("message");
   messageEl.classList.remove("hidden");
@@ -25,11 +38,11 @@ function message(text) {
 
 // variable correctif
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let baseEnemiesToKill = 1;
+let baseEnemiesToKill = 50;
 let enemiesToKill = baseEnemiesToKill;
 let laserCharge = 3000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
-let bossHP = 1;
+let bossHP = 200;
 let spawnTimer = 0;
 let spawnInterval = 2000;
 let spawnAccelerationTimer = 0;
@@ -92,7 +105,7 @@ player.img = new Image();
 player.img.src = "/asset/sprite/sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
 
 const bossImage = new Image();
-bossImage.src = "final-boss.webp"; // Mets le chemin correct ici si l'image est dans un sous-dossier
+bossImage.src = "/asset/boss.png";
 
 function createShop(bossCoins) {
   isPaused = true; // Met le jeu en pause
