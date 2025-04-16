@@ -6,6 +6,8 @@ const pointsEl = document.getElementById("points");
 const healthEl = document.getElementById("health");
 const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
+const startButton = document.querySelector("#start-button");
+const pauseButton = document.querySelector("#pause-button");
 
 shootSound.volume = 0.3;
 
@@ -32,6 +34,7 @@ let spawnAccelerationTimer = 0;
 const minSpawnInterval = 400;
 let kamikazeSpawnChance = 6; // 6/10 de chance de spawn un kamikaze
 let gunnerSpawnChance = 3; // 3/10 de chance de spawn un gunner
+let pointToGamble = 50;
 // les tank sont le reste des  chance de spawn (1/10)
 
 let chance_double_shot = 0.5;
@@ -52,7 +55,7 @@ let chance_shield = 3;
 let laps_shield = 10000;
 
 let chance_score_x2 = 2; // Applique un multiplicateur de score x2 pendant 10 sec.
-let laps_score_x2 = 1000;
+let laps_score_x2 = 3000;
 
 let win = false;
 let bossBeaten = 0; // Nombre de boss battus
@@ -613,6 +616,9 @@ const getId = async () => {
       },
     });
     const data = await response.json();
+    if (data.error) {
+      window.location.href = "/login"; // Redirige vers la page de connexion si le token est invalide
+    }
     if (response.ok) {
       return data.id; // Retourne l'id de l'utilisateur
     }
@@ -625,7 +631,7 @@ const putUserScore = async (id, score) => {
   try {
     await fetch(`http://localhost:5000/api/users/newScore/`, {
       method: "put",
-      headers: { "Content-Type": "application/json", id: id },
+      headers: { "Content-Type": "application/json", id: `${id}` },
       body: JSON.stringify({ score: score }),
     });
   } catch (error) {
@@ -710,6 +716,12 @@ function updateHealthUI() {
 }
 
 function loop() {
+  // Si le jeu est en pause, ne pas continuer la boucle
+  if (isPaused) {
+    requestAnimationFrame(loop);
+    return;
+  }
+
   // Si Game Over, arrête toute mise à jour du jeu et affiche l'écran de fin
   if (gameOver) {
     ctx.save();
@@ -832,8 +844,8 @@ window.addEventListener("keyup", (e) => {
 
 // === LOTTERY ===
 const lotteryRoll = () => {
-  if (player.points >= 100) {
-    player.points -= 100;
+  if (player.points >= pointToGamble) {
+    player.points -= pointToGamble;
     const reward = pickPowerUp();
     // player.powerups.push(reward);
     message(`Tu as gagné : ${reward}`);
@@ -916,6 +928,7 @@ function applyPowerUp(power) {
         () => (player.scoreMultiplier = player.scoreMultiplier / 2),
         laps_score_x2
       );
+      setTimeout(updateUI(player.score, player.points), laps_score_x2);
       updateUI(player.score, player.points);
       break;
   }
@@ -924,5 +937,27 @@ function applyPowerUp(power) {
 // === Démarre le jeu ===
 const hgScore = new Event("resetGame");
 window.dispatchEvent(hgScore); // initialise le highScore
+getId();
 updateHealthUI();
-loop();
+
+startButton.addEventListener("click", () => {
+  startButton.remove(); // Supprime le bouton après avoir cliqué
+  pauseButton.classList.remove("hidden"); // Affiche le bouton de pause
+  loop(); // Démarre la boucle du jeu
+});
+
+let isPaused = false;
+
+// Gestion de la pause avec la touche "Escape"
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Escape") {
+    isPaused = !isPaused; // Inverse l'état de pause
+    pauseButton.textContent = isPaused ? "Reprendre" : "Pause"; // Change le texte du bouton
+  }
+});
+
+// Gestionnaire d'événement pour le bouton Pause
+pauseButton.addEventListener("click", () => {
+  isPaused = !isPaused; // Inverse l'état de pause
+  pauseButton.textContent = isPaused ? "Reprendre" : "Pause"; // Change le texte du bouton
+});

@@ -7,6 +7,7 @@ export function UserProvider({ children }) {
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
+
     if (storedToken) {
       setToken(storedToken);
     }
