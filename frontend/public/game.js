@@ -29,9 +29,9 @@ const enemyImages = {
 };
 
 // Configuration des sources des images
-enemyImages.kamikaze.src = "/asset/sprite/enemy_kamikaze.png";
-enemyImages.gunner.src = "/asset/sprite/enemy_gunner.png";
-enemyImages.tank.src = "/asset/sprite/enemy_tank.png";
+enemyImages.kamikaze.src = "/asset/sprite/kamikaze.png";
+enemyImages.gunner.src = "/asset/sprite/tireur.png";
+enemyImages.tank.src = "/asset/sprite/tank.png";
 enemyImages.boss.src = "/asset/sprite/boss.png";
 enemyImages.kamikaze.onerror = () =>
   console.error("Failed to load kamikaze image");
@@ -115,7 +115,7 @@ let player = {
 const defaultShootCooldown = 300;
 // On ajoute l'image du joueur pour remplacer le cube
 player.img = new Image();
-player.img.src = "/asset/sprite/sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
+player.img.src = "/asset/sprite/perso.png"; // Remplace ce chemin par l'URL de ton image
 
 enemyImages.boss = new Image();
 enemyImages.boss.src = "/asset/sprite/boss.png";
