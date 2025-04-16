@@ -9,7 +9,7 @@ Un jeu de type Space Invaders avec une API backend et un frontend interactif. Le
 ## Fonctionnalités
 
 - **Gameplay :**
-  - Ennemis avec différents comportements (kamikaze, gunner, tank).
+  - Ennemis avec différents comportements (wkamikaze, gunner, tank).
   - Boss avec attaques spéciales (laser, torpilles).
   - Power-ups (double tir, bouclier, rapidité, etc.).
   - Boutique pour acheter des améliorations avec des BossCoins.
