@@ -61,12 +61,7 @@ export default function LeaderBoard() {
         placeholder="Rechercher un joueur..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        style={{
-          padding: "10px",
-          fontSize: "16px",
-          marginBottom: "20px",
-          width: "100%",
-        }}
+        className="leaderboard-search"
       />
       <div>
         {filteredLeaderboard.length > 0 ? (

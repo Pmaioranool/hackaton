@@ -433,3 +433,30 @@ button:hover {
     box-shadow: 0 0 20px #00ffcc, 0 0 30px #00ffcc;
   }
 }
+
+/* Style pour la barre de recherche du leaderboard */
+.leaderboard-container input[type="text"] {
+  width: 80%;
+  padding: 12px 20px;
+  margin: 15px 0 25px 0;
+  background: #111;
+  border: 2px solid #00ffcc;
+  border-radius: 30px;
+  color: #00ffcc;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+}
+
+.leaderboard-container input[type="text"]::placeholder {
+  color: #00ffcc;
+  opacity: 0.7;
+}
+
+.leaderboard-container input[type="text"]:focus {
+  border-color: #00e6b8;
+  box-shadow: 0 0 15px #00ffcc;
+  transform: scale(1.02);
+}
