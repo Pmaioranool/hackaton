@@ -528,7 +528,6 @@ function update() {
         player.health--;
         updateHealthUI();
         if (player.health <= 0) {
-          message("Game Over!");
           // Active gameOver au lieu d'appeler resetGame()
           gameOver = true;
         }
@@ -637,7 +636,7 @@ function loop() {
   // Si Game Over, arrête toute mise à jour du jeu et affiche l'écran de fin
   if (gameOver) {
     ctx.save();
-    ctx.fillStyle = "rgba(50,50,50,0.95)";
+    ctx.fillStyle = "rgba(80,20,50,0.95)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "white";
     ctx.font = "bold 48px Arial";
