@@ -1,22 +1,20 @@
 import { useEffect, useState, useContext } from "react";
+import UserContext from "./component/UserContext";
 import { useRouter } from "next/router";
-import AuthContext from "../context/AuthContext";
 
 export default function Home() {
-  const { token } = useContext(AuthContext); // Vérifie si l'utilisateur est connecté
-  const router = useRouter();
+  const { token } = useContext(UserContext); // Vérifie si l'utilisateur est connecté
   const [highScore, setHighScore] = useState(null); // État pour stocker le score
-
-  // Redirige vers /login si l'utilisateur n'est pas connecté
-  useEffect(() => {
-    if (!token) {
-      router.push("/login");
-    }
-  }, [token]);
+  const router = useRouter();
 
   // Charge le script du jeu après le rendu de la page
   useEffect(() => {
-    if (!token) return; // Ne charge pas le script si l'utilisateur n'est pas connecté
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.replace("/login");
+      return; // Ne charge pas le script si l'utilisateur n'est pas connecté
+    }
 
     const script = document.createElement("script");
     script.src = "/game.js";
@@ -28,7 +26,7 @@ export default function Home() {
       // Nettoie le script lors du démontage du composant
       document.body.removeChild(script);
     };
-  }, [token]);
+  }, []);
 
   // Récupère le score de l'utilisateur
   useEffect(() => {
@@ -92,7 +90,6 @@ export default function Home() {
 
   return (
     <div>
-      <link rel="stylesheet" href="/style.css" />
       <span id="message" className="hidden"></span>
       <nav>
         <ul>
@@ -101,6 +98,9 @@ export default function Home() {
           </li>
           <li>
             <a href="/account">Account</a>
+          </li>
+          <li>
+            <a href="/leaderboard">Leaderboard</a>
           </li>
         </ul>
       </nav>

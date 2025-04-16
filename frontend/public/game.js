@@ -31,7 +31,7 @@ let spawnAccelerationTimer = 0;
 const minSpawnInterval = 400;
 let kamikazeSpawnChance = 6; // 6/10 de chance de spawn un kamikaze
 let gunnerSpawnChance = 3; // 3/10 de chance de spawn un gunner
-// les tank sont le reste des  chance de spawn (2/10)
+// les tank sont le reste des  chance de spawn (1/10)
 
 let win = false;
 let bossBeaten = 10; // Nombre de boss battus

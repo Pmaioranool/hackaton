@@ -114,7 +114,7 @@ router.put("/newScore/:id", async (req, res) => {
 });
 
 // Route pour récupérer un utilisateur par ID
-router.get("/:id", async (req, res) => {
+router.get("/one/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const user = await User.findById(id);
