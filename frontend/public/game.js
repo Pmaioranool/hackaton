@@ -25,8 +25,7 @@ let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de toure
 let enemiesToKill = 1;
 let laserCharge = 1000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
-let bossMaxHP = 200;
-let bossHP = 200;
+let bossHP = 300;
 let spawnTimer = 0;
 let spawnInterval = 2000; // entre 1 et 3 secondes
 let spawnAccelerationTimer = 0;
@@ -35,8 +34,17 @@ let kamikazeSpawnChance = 6; // 6/10 de chance de spawn un kamikaze
 let gunnerSpawnChance = 3; // 3/10 de chance de spawn un gunner
 // les tank sont le reste des  chance de spawn (1/10)
 
+let double_shot;
+
+let chance_speed_up = 1;
+let chance_shield = 2;
+let chance_rapid_fire = 1;
+let chance_heal = 3;
+let chance_damage_bonus = 1; // Applique un multiplicateur de dégâts x2 pendant 10 sec.
+let chance_score_x2 = 2; // Applique un multiplicateur de score x2 pendant 10 sec.
+
 let win = false;
-let bossBeaten = 10; // Nombre de boss battus
+let bossBeaten = 0; // Nombre de boss battus
 
 // === PLAYER SETUP ===
 let player = {
@@ -431,12 +439,10 @@ function update() {
     if (boss.x <= 0 || boss.x + boss.width >= canvas.width)
       boss.direction *= -1;
 
-    if (bossImage.complete) {
+    if (boss.img) {
       ctx.drawImage(bossImage, boss.x, boss.y, boss.width, boss.height);
     } else {
-      bossImage.onload = () => {
-        ctx.drawImage(bossImage, boss.x, boss.y, boss.width, boss.height);
-      };
+      drawRect(boss);
     }
 
     // === Laser ===
@@ -666,7 +672,7 @@ function drawBossHealthBar(boss) {
   ctx.fillRect(x, y, barWidth, barHeight);
 
   // Vie actuelle
-  const healthWidth = (boss.hp / 200) * barWidth;
+  const healthWidth = (boss.hp / bossHP) * barWidth;
   ctx.fillStyle = "red";
   ctx.fillRect(x, y, healthWidth, barHeight);
 
@@ -679,11 +685,10 @@ function drawBossHealthBar(boss) {
   ctx.fillStyle = "white";
   ctx.font = "bold 16px Arial";
   ctx.textAlign = "center";
-  ctx.fillText(`BOSS: ${boss.hp}/200`, canvas.width / 2, y + barHeight / 2 + 5);
 }
 function updateUI() {
-  scoreEl.textContent = player.score;
-  pointsEl.textContent = player.points;
+  scoreEl.textContent = `${player.score} X ${player.scoreMultiplier}`;
+  pointsEl.textContent = `${player.points}`;
 }
 
 function updateHealthUI() {
@@ -821,7 +826,7 @@ const lotteryRoll = () => {
   if (player.points >= 100) {
     player.points -= 100;
     const reward = pickPowerUp();
-    player.powerups.push(reward);
+    // player.powerups.push(reward);
     message(`Tu as gagné : ${reward}`);
     applyPowerUp(reward);
     updateUI(player.score, player.points);
