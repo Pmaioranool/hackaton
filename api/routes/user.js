@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
 });
 router.put("/update", async (req, res) => {
   const { newUsername, newPassword } = req.body;
-  const token = req.headers.authorization?.split(' ')[1];
+  const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ message: "Authentification requise." });
@@ -43,7 +43,7 @@ router.put("/update", async (req, res) => {
     }
 
     await user.save();
-    
+
     // Générer un nouveau token si le username a changé
     let newToken = token;
     if (newUsername) {
@@ -54,12 +54,12 @@ router.put("/update", async (req, res) => {
       );
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Informations mises à jour.",
-      token: newToken 
+      token: newToken,
     });
   } catch (err) {
-    if (err.name === 'JsonWebTokenError') {
+    if (err.name === "JsonWebTokenError") {
       return res.status(401).json({ message: "Token invalide." });
     }
     console.error("Erreur backend :", err);
@@ -146,7 +146,7 @@ router.put("/", async (req, res) => {
   }
 });
 
-router.put("/newScore/", async (req, res) => {
+router.put("/newScore", async (req, res) => {
   const { id } = req.headers;
   const { score } = req.body;
 
@@ -185,7 +185,7 @@ router.get("/one", async (req, res) => {
 // Route pour récupérer les scores (leaderboard)
 router.get("/leaderboard", async (req, res) => {
   try {
-    const users = await User.find().sort({ score: -1 });
+    const users = await User.find().sort({ score: -1 }).limit(5);
     res.json(users);
   } catch (err) {
     res.status(400).json({ error: err.message });

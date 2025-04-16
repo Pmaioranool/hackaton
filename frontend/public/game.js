@@ -22,11 +22,13 @@ function message(text) {
 
 // variable correctif
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let enemiesToKill = 100;
-let laserCharge = 3000;
-let LaserCooldown = 2000; // 2 secondes entre chaque tir de laser
+let enemiesToKill = 1;
+let laserCharge = 1000;
+let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
+let bossMaxHP = 200;
+let bossHP = 200;
 let spawnTimer = 0;
-let spawnInterval = 2000;
+let spawnInterval = 2000; // entre 1 et 3 secondes
 let spawnAccelerationTimer = 0;
 const minSpawnInterval = 400;
 let kamikazeSpawnChance = 6; // 6/10 de chance de spawn un kamikaze
@@ -53,7 +55,6 @@ let player = {
   baseScoreMultiplier: 1, // Ajout du multiplicateur de score (1 = normal, 2 = x2 score)
   health: 3,
   maxHealth: 3,
-  powerups: [],
   shootDouble: false,
   rapidFire: false,
   shield: false,
@@ -342,11 +343,6 @@ function update() {
         } else {
           player.health--;
           updateHealthUI(player.health);
-          if (player.health <= 0) {
-            message("Game Over!");
-            // Active gameOver au lieu d'appeler resetGame()
-            gameOver = true;
-          }
         }
         enemies.splice(ei, 1);
       }
@@ -362,7 +358,7 @@ function update() {
         width: 200,
         height: 60,
         color: "crimson",
-        hp: 200,
+        hp: bossHP,
         direction: 1,
         speed: 2,
         lastTorpedoTime: 0,
@@ -474,9 +470,10 @@ function update() {
         player.x < bossLaser.x + bossLaser.width &&
         player.x + player.width > bossLaser.x
       ) {
-        message("Touché par le laser ! Game Over!");
+        // message("Touché par le laser ! Game Over!");
         // Active gameOver au lieu d'appeler resetGame()
-        gameOver = true;
+        player.health = player.health - 2;
+        updateHealthUI();
         bossLaser = null;
         return;
       }
@@ -536,11 +533,6 @@ function update() {
       } else {
         player.health--;
         updateHealthUI();
-        if (player.health <= 0) {
-          message("Game Over!");
-          // Active gameOver au lieu d'appeler resetGame()
-          gameOver = true;
-        }
       }
       enemyBullets.splice(bi, 1);
     } else if (b.y > canvas.height) {
@@ -639,6 +631,11 @@ function updateUI() {
 }
 
 function updateHealthUI() {
+  if (player.health <= 0) {
+    // message("Game Over!");
+    // Active gameOver au lieu d'appeler resetGame()
+    gameOver = true;
+  }
   healthEl.textContent = `Vie: ${player.health}`;
 }
 
@@ -653,7 +650,11 @@ function loop() {
     ctx.textAlign = "center";
     ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 80);
     ctx.font = "20px Arial";
-    ctx.fillText("Appuie sur Entrée pour rejouer", canvas.width / 2, canvas.height / 2 + 20);
+    ctx.fillText(
+      "Appuie sur Entrée pour rejouer",
+      canvas.width / 2,
+      canvas.height / 2 + 20
+    );
     ctx.restore();
 
     // Vérifie si Entrée est pressée pour redémarrer
@@ -669,7 +670,9 @@ function loop() {
 
   // Tir automatique du joueur
   const now = Date.now();
-  const shootCooldown = player.rapidFire ? rapidFireCooldown : defaultShootCooldown;
+  const shootCooldown = player.rapidFire
+    ? rapidFireCooldown
+    : defaultShootCooldown;
   if (now - lastShotTime >= shootCooldown) {
     lastShotTime = now;
     shootSound.currentTime = 0;

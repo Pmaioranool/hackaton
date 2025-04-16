@@ -122,7 +122,7 @@ button:hover {
 #message {
   position: absolute;
   top: 10%; /* Ajusté pour un meilleur placement */
-  left: 45%;
+  left: 47.5%;
   transform: translateX(-50%); /* Centrer horizontalement */
 
   background-color: rgba(
