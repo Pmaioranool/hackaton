@@ -185,7 +185,7 @@ router.get("/one", async (req, res) => {
 // Route pour récupérer les scores (leaderboard)
 router.get("/leaderboard", async (req, res) => {
   try {
-    const users = await User.find().sort({ score: -1 }).limit(5);
+    const users = await User.find().sort({ score: -1 });
     res.json(users);
   } catch (err) {
     res.status(400).json({ error: err.message });

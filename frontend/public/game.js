@@ -24,10 +24,11 @@ function message(text) {
 
 // variable correctif
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let enemiesToKill = 100;
+let baseEnemiesToKill = 1;
+let enemiesToKill = baseEnemiesToKill;
 let laserCharge = 1000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
-let bossHP = 300;
+let bossHP = 1;
 let spawnTimer = 0;
 let spawnInterval = 2000;
 let spawnAccelerationTimer = 0;
@@ -68,18 +69,20 @@ let player = {
   height: 30,
   color: "lime",
   damage: 1,
-  baseDamage: 1, // Ajout du multiplicateur de dégâts (1 = normal, 2 = x2 damage)
+  baseDamage: 1,
   speed: 4,
   baseSpeed: 4,
   points: 0,
   score: 0,
-  scoreMultiplier: 1, // Multiplicateur de score};
-  baseScoreMultiplier: 1, // Ajout du multiplicateur de score (1 = normal, 2 = x2 score)
+  scoreMultiplier: 1,
+  baseScoreMultiplier: 1,
   health: 3,
   maxHealth: 3,
-  shootDouble: false,
+  extraCannons: 0, // Nouveau : nombre de canons supplémentaires
   rapidFire: false,
   shield: false,
+  bossCoins: 1000,
+  baseCannon: 1,
 };
 
 const defaultShootCooldown = 300;
@@ -89,6 +92,122 @@ player.img.src = "sprite_hero.png"; // Remplace ce chemin par l'URL de ton image
 
 const bossImage = new Image();
 bossImage.src = "final-boss.webp"; // Mets le chemin correct ici si l'image est dans un sous-dossier
+
+function createShop(bossCoins) {
+  isPaused = true; // Met le jeu en pause
+
+  // Conteneur principal de la boutique
+  const shopContainer = document.createElement("div");
+  shopContainer.className = "shop-container";
+  shopContainer.style.position = "absolute";
+  shopContainer.style.top = "50%";
+  shopContainer.style.left = "50%";
+  shopContainer.style.transform = "translate(-50%, -50%)";
+  shopContainer.style.padding = "20px";
+  shopContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+  shopContainer.style.color = "white";
+  shopContainer.style.border = "2px solid white";
+  shopContainer.style.borderRadius = "10px";
+  shopContainer.style.fontFamily = "Arial, sans-serif";
+  shopContainer.style.zIndex = "1000";
+
+  // Titre de la boutique
+  const shopTitle = document.createElement("h1");
+  shopTitle.textContent = "Shop";
+  shopContainer.appendChild(shopTitle);
+
+  // Affichage des BossCoins
+  const bossCoinsDisplay = document.createElement("p");
+  bossCoinsDisplay.innerHTML = `<strong>BossCoins :</strong> ${bossCoins}`;
+  shopContainer.appendChild(bossCoinsDisplay);
+
+  // Liste des articles
+  const itemsList = document.createElement("ul");
+  itemsList.style.listStyle = "none";
+  itemsList.style.padding = "0";
+
+  items.forEach((item) => {
+    const listItem = document.createElement("li");
+    listItem.style.marginBottom = "10px";
+
+    if (item.max !== 0) {
+      const itemText = document.createElement("span");
+      itemText.textContent = `${item.name} - ${item.cost} BossCoins - encore ${item.max}`;
+      listItem.appendChild(itemText);
+
+      // Bouton d'achat
+      const buyButton = document.createElement("button");
+      buyButton.textContent = "Acheter";
+      buyButton.style.marginLeft = "10px";
+      buyButton.style.padding = "5px 10px";
+      buyButton.style.backgroundColor = "#007bff";
+      buyButton.style.color = "white";
+      buyButton.style.border = "none";
+      buyButton.style.borderRadius = "5px";
+      buyButton.style.cursor = "pointer";
+
+      buyButton.addEventListener("click", () => {
+        handlePurchase(item, bossCoinsDisplay, shopContainer);
+      });
+
+      listItem.appendChild(buyButton);
+      itemsList.appendChild(listItem);
+    }
+  });
+
+  shopContainer.appendChild(itemsList);
+
+  // Ajoute la boutique au document
+  document.body.appendChild(shopContainer);
+}
+
+// Fonction pour gérer l'achat d'un article
+function handlePurchase(item, bossCoinsDisplay, shopContainer) {
+  if (player.bossCoins >= item.cost) {
+    if (item.max > 0 || item.max === "illimité") {
+      player.bossCoins -= item.cost; // Déduit le coût des BossCoins
+      bossCoinsDisplay.innerHTML = `<strong>BossCoins :</strong> ${player.bossCoins}`;
+      switch (item.id) {
+        case 1:
+          player.damage += 1; // Double les dégâts
+          player.baseDamage += 1; // Double les dégâts
+          item.max -= 1; // Réduit le nombre d'achats possibles
+          break;
+        case 2:
+          player.maxHealth += 1; // Augmente la vie max
+          player.health += 1; // Récupère 1 vie
+          updateHealthUI(player.health);
+          item.max -= 1; // Réduit le nombre d'achats possibles
+          break;
+        case 3:
+          player.extraCannons += 1; // Ajoute une deuxième tourelle
+          item.max -= 1; // Réduit le nombre d'achats possibles
+          break;
+        case 4:
+          player.shield = true; // Ajoute un bouclier
+          break;
+        case 5: // Skip
+          break;
+      }
+      shopContainer.remove(); // Supprime la boutique après l'achat
+      isPaused = false; // Reprend le jeu
+    }
+  } else {
+    message("Vous n'avez pas assez de BossCoins !");
+  }
+}
+
+// Liste des articles disponibles
+const items = [
+  { id: 1, name: "Damage Bonus", cost: 3, max: 2 },
+  { id: 2, name: "Max Health Bonus", cost: 3, max: 3 },
+  { id: 3, name: "More Cannons", cost: 5, max: 4 },
+  { id: 4, name: "Shield Upgrade", cost: 1, max: "illimité" },
+  { id: 5, name: "skip", cost: 0, max: "illimité" },
+];
+
+// Crée et affiche la boutique
+// Fonction pour gérer l'achat d'un article
 
 let bullets = [];
 let enemies = [];
@@ -556,8 +675,9 @@ function update() {
         if (boss.hp <= 0) {
           message("Boss vaincu ! GG !");
           player.score += 1000 * player.scoreMultiplier;
-          win = true;
           bossBeaten += 1;
+          player.bossCoins += 1; // Ajoute 1 BossCoin au joueur
+          win = true;
           resetGame();
           return; // Sortir immédiatement après avoir reset le jeu
         }
@@ -646,13 +766,16 @@ async function resetGame() {
     player.score = 0;
     player.points = 0;
     spawnInterval = 2000;
+    player.maxHealth = 3; // Réinitialise la vie max
+    player.health = player.maxHealth; // Réinitialise la vie actuelle
     bossBeaten = 0; // Réinitialise le nombre de boss battus
-    enemiesToKill = 100; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
+    enemiesToKill = baseEnemiesToKill; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
   } else {
+    createShop(player.bossCoins);
     player.points += 100; // Bonus de points pour avoir battu le boss
     if (spawnInterval > minSpawnInterval)
       spawnInterval = 2000 - bossBeaten * 100; // Réduction de l'intervalle de spawn des ennemis
-    enemiesToKill = 100 + bossBeaten + 10;
+    enemiesToKill = baseEnemiesToKill + bossBeaten + 10;
   }
 
   player.health = player.maxHealth;
@@ -660,7 +783,6 @@ async function resetGame() {
   enemies = [];
   enemyBullets = [];
   player.powerups = [];
-  player.shootDouble = false;
   player.rapidFire = false;
   player.shield = false;
   player.speed = player.baseSpeed;
@@ -670,12 +792,14 @@ async function resetGame() {
   boss = null;
   bossLaser = null;
   enemiesKilled = 0;
-  win = false;
   updateUI(player.score, player.points);
   updateHealthUI(player.health);
+
+  win = false;
   const event = new Event("resetGame");
   window.dispatchEvent(event);
 }
+
 function drawBossHealthBar(boss) {
   const barWidth = 200;
   const barHeight = 20;
@@ -755,14 +879,27 @@ function loop() {
   const shootCooldown = player.rapidFire
     ? rapidFireCooldown
     : defaultShootCooldown;
+
   if (now - lastShotTime >= shootCooldown) {
     lastShotTime = now;
     shootSound.currentTime = 0;
     shootSound.play();
-    if (player.shootDouble) {
+
+    // Tir principal
+    bullets.push({
+      x: player.x + player.width / 2 - 2,
+      y: player.y,
+      width: 4,
+      height: 10,
+      color: "white",
+      speed: 7,
+    });
+
+    // Ajout des canons supplémentaires
+    for (let i = 1; i <= player.extraCannons; i++) {
       bullets.push(
         {
-          x: player.x + player.width / 2 - 10,
+          x: player.x + player.width / 2 - 10 - i * 10, // Décalage à gauche
           y: player.y,
           width: 4,
           height: 10,
@@ -770,7 +907,7 @@ function loop() {
           speed: 7,
         },
         {
-          x: player.x + player.width / 2 + 6,
+          x: player.x + player.width / 2 + 6 + i * 10, // Décalage à droite
           y: player.y,
           width: 4,
           height: 10,
@@ -778,15 +915,6 @@ function loop() {
           speed: 7,
         }
       );
-    } else {
-      bullets.push({
-        x: player.x + player.width / 2 - 2,
-        y: player.y,
-        width: 4,
-        height: 10,
-        color: "white",
-        speed: 7,
-      });
     }
   }
 
@@ -889,14 +1017,21 @@ function pickPowerUp() {
 function applyPowerUp(power) {
   switch (power) {
     case "double_shot":
-      player.shootDouble = true;
-      setTimeout(() => (player.shootDouble = false), laps_double_shot);
+      player.extraCannons += 1; // Ajoute un canon supplémentaire
+      setTimeout(() => {
+        player.extraCannons = Math.max(0, player.extraCannons - 1); // Réduit le nombre de canons après un délai
+      }, laps_double_shot);
       break;
     case "speed_up":
       player.speed = player.baseSpeed + 3;
       setTimeout(() => (player.speed = player.baseSpeed), laps_speed_up);
       break;
     case "shield":
+      if (!player.shield) {
+        message("deja un shield");
+        player.points += 50;
+        break;
+      }
       player.shield = true;
       break;
     case "rapid_fire":
