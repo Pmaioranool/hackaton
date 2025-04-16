@@ -45,12 +45,12 @@ function message(text) {
 // variable correctif
 // boss variables
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let baseEnemiesToKill = 100; // enemies a tuer pour spawn un boss
+let baseEnemiesToKill = 1; // enemies a tuer pour spawn un boss
 let enemiesToKill = baseEnemiesToKill;
 let laserCharge = 3000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
-let bossHP = 200;
 let bossHPMax = 200;
+let bossHP = bossHPMax;
 let win = false;
 let bossBeaten = 0; // Nombre de boss battus
 
@@ -73,21 +73,20 @@ let chance_double_shot = 0.5;
 let laps_double_shot = 7000;
 
 let chance_rapid_fire = 0.5;
-let laps_rapid_fire = 2000;
+let laps_rapid_fire = 2500;
 const rapidFireCooldown = 100;
 
 let chance_damage_bonus = 0.5; // Applique un multiplicateur de dégâts x2 pendant 10 sec.
 let laps_damage_bonus = 7500;
 
 let chance_speed_up = 1;
-let laps_speed_up = 3000;
-
-let chance_heal = 2.5;
-let chance_shield = 3;
-let laps_shield = 10000;
+let laps_speed_up = 2000;
 
 let chance_score_x2 = 2; // Applique un multiplicateur de score x2 pendant 10 sec.
 let laps_score_x2 = 3000;
+
+let chance_heal = 2.5;
+let chance_shield = 3;
 
 // === PLAYER SETUP ===
 let player = {
@@ -1225,16 +1224,18 @@ function applyPowerUp(power) {
       }, laps_rapid_fire);
       break;
     case "damage_bonus":
+      let oldamage = player.damage;
       player.damage *= 2;
       setTimeout(() => {
-        player.damage /= 2;
+        player.damage = oldamage;
         removePowerUp("damage_bonus");
       }, laps_damage_bonus);
       break;
     case "score_x2":
+      let oldSCoreM = player.scoreMultiplier;
       player.scoreMultiplier *= 2;
       setTimeout(() => {
-        player.scoreMultiplier /= 2;
+        player.scoreMultiplier = oldSCoreM;
         removePowerUp("score_x2");
       }, laps_score_x2);
       break;
