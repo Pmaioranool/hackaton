@@ -22,7 +22,7 @@ function message(text) {
 
 // variable correctif
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let enemiesToKill = 100;
+let enemiesToKill = 1;
 let laserCharge = 3000;
 let LaserCooldown = 2000; // 2 secondes entre chaque tir de laser
 let spawnTimer = 0;
@@ -47,7 +47,7 @@ let player = {
   baseDamage: 1, // Ajout du multiplicateur de dégâts (1 = normal, 2 = x2 damage)
   speed: 4,
   baseSpeed: 4,
-  points: 0,
+  points: 100000,
   score: 0,
   scoreMultiplier: 1, // Multiplicateur de score};
   baseScoreMultiplier: 1, // Ajout du multiplicateur de score (1 = normal, 2 = x2 score)
@@ -362,7 +362,7 @@ function update() {
         width: 200,
         height: 60,
         color: "crimson",
-        hp: 200,
+        hp: 30,
         direction: 1,
         speed: 2,
         lastTorpedoTime: 0,
@@ -374,7 +374,9 @@ function update() {
   }
 
   // === BOSS ===
-  if (boss) {
+  if (boss !== null) {
+    drawRect(boss);
+    drawBossHealthBar(boss);
     if (Date.now() - lastTurretSpawnTime > turretSpawnInterval) {
       spawnTurrets();
       lastTurretSpawnTime = Date.now();
@@ -499,24 +501,43 @@ function update() {
     }
 
     // Dégâts du joueur sur le boss
-    bullets.forEach((bullet, bi) => {
-      if (
-        bullet.x < boss.x + boss.width &&
-        bullet.x + bullet.width > boss.x &&
-        bullet.y < boss.y + boss.height &&
-        bullet.y + bullet.height > boss.y
-      ) {
-        bullets.splice(bi, 1);
-        boss.hp -= player.damage; // Multiplicateur de dégâts appliqué au boss
-        if (boss.hp <= 0) {
-          message("Boss vaincu ! GG !");
-          player.score += 1000 * player.scoreMultiplier; // Multiplicateur de score appliqué
-          win = true;
-          bossBeaten += 1; // Incrémente le nombre de boss battus
-          resetGame();
-        }
+// Dégâts du joueur sur le boss
+// Dégâts du joueur sur le boss
+bullets.forEach((bullet, bi) => {
+  // Vérifie d'abord que le boss existe toujours
+  if (!boss) return;
+
+  // Ensuite vérifie la collision
+  if (
+    bullet.x < boss.x + boss.width &&
+    bullet.x + bullet.width > boss.x &&
+    bullet.y < boss.y + boss.height &&
+    bullet.y + bullet.height > boss.y
+  ) {
+    bullets.splice(bi, 1);
+    boss.hp -= player.damage;
+    
+    // Effet visuel quand le boss prend des dégâts
+    shakeDuration = 5;
+    const originalColor = boss.color;
+    boss.color = "darkred";
+    
+    setTimeout(() => {
+      if (boss) { // Vérifie à nouveau que le boss existe
+        boss.color = originalColor;
       }
-    });
+    }, 100);
+
+    if (boss.hp <= 0) {
+      message("Boss vaincu ! GG !");
+      player.score += 1000 * player.scoreMultiplier;
+      win = true;
+      bossBeaten += 1;
+      resetGame();
+      return; // Sortir immédiatement après avoir reset le jeu
+    }
+  }
+});
   }
 
   // === BULLETS ENNEMIES ===
@@ -600,10 +621,10 @@ async function resetGame() {
     const id = await getId();
     putUserScore(id, player.score); // Envoie le score au backend
     player.score = 0;
-    player.points = 0;
+    player.points = 1000000000;
     spawnInterval = 2000;
     bossBeaten = 0; // Réinitialise le nombre de boss battus
-    enemiesToKill = 100; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
+    enemiesToKill = 1; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
   } else {
     player.points += 100; // Bonus de points pour avoir battu le boss
     if (spawnInterval > minSpawnInterval)
@@ -632,7 +653,32 @@ async function resetGame() {
   const event = new Event("resetGame");
   window.dispatchEvent(event);
 }
-
+function drawBossHealthBar(boss) {
+  const barWidth = 200;
+  const barHeight = 20;
+  const x = canvas.width / 2 - barWidth / 2;
+  const y = 10;
+  
+  // Fond de la barre
+  ctx.fillStyle = "black";
+  ctx.fillRect(x, y, barWidth, barHeight);
+  
+  // Vie actuelle
+  const healthWidth = (boss.hp / 200) * barWidth;
+  ctx.fillStyle = "red";
+  ctx.fillRect(x, y, healthWidth, barHeight);
+  
+  // Contour
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, barWidth, barHeight);
+  
+  // Texte
+  ctx.fillStyle = "white";
+  ctx.font = "bold 16px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(`BOSS: ${boss.hp}/200`, canvas.width / 2, y + barHeight / 2 + 5);
+}
 function updateUI() {
   scoreEl.textContent = player.score;
   pointsEl.textContent = player.points;
