@@ -49,7 +49,7 @@ let baseEnemiesToKill = 1; // enemies a tuer pour spawn un boss
 let enemiesToKill = baseEnemiesToKill;
 let laserCharge = 3000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
-let bossHPMax = 200;
+let bossHPMax = 2;
 let bossHP = bossHPMax;
 let win = false;
 let bossBeaten = 0; // Nombre de boss battus
@@ -855,8 +855,8 @@ async function resetGame() {
   gameOverContainer.classList.add("hidden");
 
   try {
-    await backgroundMusic.pause();
-    await bossMusic.pause();
+    backgroundMusic.pause();
+    bossMusic.pause();
 
     if (!gameOver) {
       backgroundMusic.currentTime = 0;
@@ -877,6 +877,8 @@ async function resetGame() {
     player.health = player.maxHealth; // Réinitialise la vie actuelle
     bossBeaten = 0; // Réinitialise le nombre de boss battus
     enemiesToKill = baseEnemiesToKill; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
+    bossHP = bossHPMax;
+    bossCoins = 0;
   } else {
     createShop(player.bossCoins);
     player.points += 100; // Bonus de points pour avoir battu le boss
@@ -1237,6 +1239,7 @@ function applyPowerUp(power) {
       setTimeout(() => {
         player.scoreMultiplier = oldSCoreM;
         removePowerUp("score_x2");
+        updateHealthUI();
       }, laps_score_x2);
       break;
   }

@@ -6,6 +6,7 @@ export default function Register() {
   const { login } = useContext(UserContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const router = useRouter();
@@ -14,6 +15,12 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (password !== password2) {
+      setError("votre mot de passe doit être les même ");
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch("http://localhost:5000/api/users/register", {
@@ -55,6 +62,13 @@ export default function Register() {
           placeholder="Mot de passe"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="confirmer votre mot de passe"
+          value={password2}
+          onChange={(e) => setPassword2(e.target.value)}
           required
         />
         {error && <p className="error">{error}</p>}
