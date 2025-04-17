@@ -45,7 +45,7 @@ function message(text) {
 // variable correctif
 // boss variables
 let turretSpawnInterval = 15000; // 30 secondes entre chaque apparition de tourelle
-let baseEnemiesToKill = 1; // enemies a tuer pour spawn un boss
+let baseEnemiesToKill = 5; // enemies a tuer pour spawn un boss
 let enemiesToKill = baseEnemiesToKill;
 let laserCharge = 3000;
 let LaserCooldown = Math.floor(Math.random() * 2000) + 1000; // 1 et 3 secondes entre chaque tir de laser
