@@ -878,7 +878,7 @@ async function resetGame() {
     bossBeaten = 0; // Réinitialise le nombre de boss battus
     enemiesToKill = baseEnemiesToKill; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
     bossHP = bossHPMax;
-    bossCoins = 0;
+    player.bossCoins = 0;
   } else {
     createShop(player.bossCoins);
     player.points += 100; // Bonus de points pour avoir battu le boss
