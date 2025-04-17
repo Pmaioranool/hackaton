@@ -6,6 +6,11 @@ const pointsEl = document.getElementById("points");
 const healthEl = document.getElementById("health");
 const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
+const hitSound = new Audio("/asset/sound/player_hit.mp3");
+hitSound.volume = 0.5; // ajuste selon ton mix
+const deathSound = new Audio("/asset/sound/player_death.mp3");
+deathSound.volume = 0.5; // à ajuster
+
 const backgroundMusic = new Audio("/asset/music/background.mp3");
 const bossMusic = new Audio("/asset/music/boss.mp3");
 const gameOverMusic = new Audio("/asset/music/gameover.mp3");
@@ -13,6 +18,7 @@ const startButton = document.querySelector("#start-button");
 const pauseButton = document.querySelector("#pause-button");
 const powerUpsContainer = document.getElementById("power-ups-container");
 const spriteSelector = document.querySelector("#spriteSelector");
+
 const gameOverContainer = document.querySelector("#gameOverContainer");
 let isShopOpen = false;
 shootSound.volume = 0.3;
@@ -20,6 +26,7 @@ shootSound.volume = 0.3;
 backgroundMusic.volume = 0.2; // 50% du volume
 bossMusic.volume = 0.3;
 gameOverMusic.volume = 0.3;
+
 
 // Configurer la lecture en boucle
 backgroundMusic.loop = true;
@@ -119,7 +126,7 @@ player.img = new Image();
 
 enemyImages.boss = new Image();
 
-let chooseSprite = "lucas";
+let chooseSprite = 'lucas';
 
 spriteSelector.addEventListener("click", () => {
   // Alterne entre "lucas" et "leo"
@@ -428,8 +435,8 @@ function update() {
   if (player.img && player.img.complete) {
     ctx.drawImage(
       player.img,
-      player.x,
-      player.y,
+      player.x - 5,
+      player.y - 5,
       player.width + 10,
       player.height + 10
     );
@@ -492,11 +499,12 @@ function update() {
           if (enemy.img && enemy.img.complete) {
             ctx.drawImage(
               enemy.img,
-              enemy.x,
-              enemy.y,
+              enemy.x - 5,
+              enemy.y - 5,
               enemy.width + 10,
               enemy.height + 10
             );
+            
           } else {
             drawCircle(enemy);
           }
@@ -505,11 +513,12 @@ function update() {
           if (enemy.img && enemy.img.complete) {
             ctx.drawImage(
               enemy.img,
-              enemy.x,
-              enemy.y,
+              enemy.x - 5,
+              enemy.y - 5,
               enemy.width + 10,
               enemy.height + 10
             );
+            
           } else {
             drawRect(enemy);
           }
@@ -518,11 +527,12 @@ function update() {
           if (enemy.img && enemy.img.complete) {
             ctx.drawImage(
               enemy.img,
-              enemy.x,
-              enemy.y,
+              enemy.x - 5,
+              enemy.y - 5,
               enemy.width + 10,
               enemy.height + 10
             );
+            
           } else {
             drawTriangle(enemy);
           }
@@ -571,12 +581,15 @@ function update() {
         player.y + player.height > enemy.y
       ) {
         if (player.shield) {
-          player.shield = false; // Le bouclier absorbe le coup
-          removePowerUp("shield"); // enlève le bouclier à la liste des power-ups
+          player.shield = false;
+          removePowerUp("shield");
         } else {
+          hitSound.currentTime = 0;
+          hitSound.play();
           player.health--;
           updateHealthUI(player.health);
         }
+        
         enemies.splice(ei, 1);
       }
     });
@@ -789,9 +802,11 @@ function update() {
       b.y + b.height > player.y
     ) {
       if (player.shield) {
-        player.shield = false; // Le bouclier absorbe le coup
-        removePowerUp("shield"); // enlève le bouclier à la liste des power-ups
+        player.shield = false;
+        removePowerUp("shield");
       } else {
+        hitSound.currentTime = 0;
+        hitSound.play();
         player.health--;
         updateHealthUI();
       }
@@ -878,7 +893,7 @@ async function resetGame() {
     bossBeaten = 0; // Réinitialise le nombre de boss battus
     enemiesToKill = baseEnemiesToKill; // Réinitialise le nombre d'ennemis à tuer pour faire apparaître le boss
     bossHP = bossHPMax;
-    bossCoins = 0;
+    player.bossCoins = 0;
   } else {
     createShop(player.bossCoins);
     player.points += 100; // Bonus de points pour avoir battu le boss
@@ -948,6 +963,8 @@ function updateUI() {
 
 function updateHealthUI() {
   if (player.health <= 0) {
+    deathSound.currentTime = 0;
+    deathSound.play();
     // message("Game Over!");
     // Active gameOver au lieu d'appeler resetGame()
     gameOver = true;
@@ -986,6 +1003,8 @@ function loop() {
     if (keys["Enter"]) {
       resetGame();
       gameOverMusic.pause();
+      backgroundMusic.currentTime = 0;
+      backgroundMusic.play().catch((e) => console.error("Erreur musique:", e));
       gameOver = false;
     }
     requestAnimationFrame(loop);
