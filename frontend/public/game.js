@@ -6,11 +6,11 @@ const pointsEl = document.getElementById("points");
 const healthEl = document.getElementById("health");
 const lotteryBtn = document.getElementById("lottery-btn");
 const shootSound = new Audio("shoot.mp3");
-const hitSound = new Audio("/asset/sound/player_hit.mp3");
-hitSound.volume = 0.5; // ajuste selon ton mix
-const deathSound = new Audio("/asset/sound/player_death.mp3");
-deathSound.volume = 0.5; // à ajuster
-let flashOpacity = 0;
+// const hitSound = new Audio("/asset/sound/player_hit.mp3");
+// hitSound.volume = 0.5; // ajuste selon ton mix
+// const deathSound = new Audio("/asset/sound/player_death.mp3");
+// deathSound.volume = 0.5; // à ajuster
+// let flashOpacity = 0;
 
 const backgroundMusic = new Audio("/asset/music/background.mp3");
 const bossMusic = new Audio("/asset/music/boss.mp3");
@@ -27,7 +27,6 @@ shootSound.volume = 0.3;
 backgroundMusic.volume = 0.2; // 50% du volume
 bossMusic.volume = 0.3;
 gameOverMusic.volume = 0.3;
-
 
 // Configurer la lecture en boucle
 backgroundMusic.loop = true;
@@ -127,7 +126,7 @@ player.img = new Image();
 
 enemyImages.boss = new Image();
 
-let chooseSprite = 'lucas';
+let chooseSprite = "lucas";
 
 spriteSelector.addEventListener("click", () => {
   // Alterne entre "lucas" et "leo"
@@ -286,19 +285,19 @@ let lastShotTime = 0;
 let enemiesKilled = 0;
 
 let gameOver = false; // Ajout de la variable de gestion du Game Over
-function triggerFlash(color = "red", duration = 200) {
-  flashOpacity = 1;
+// function triggerFlash(color = "red", duration = 200) {
+//   flashOpacity = 1;
 
-  const fadeStep = 50; // tous les 50ms on baisse l’opacité
+//   const fadeStep = 50; // tous les 50ms on baisse l’opacité
 
-  const interval = setInterval(() => {
-    flashOpacity -= 0.1;
-    if (flashOpacity <= 0) {
-      flashOpacity = 0;
-      clearInterval(interval);
-    }
-  }, fadeStep);
-}
+//   const interval = setInterval(() => {
+//     flashOpacity -= 0.1;
+//     if (flashOpacity <= 0) {
+//       flashOpacity = 0;
+//       clearInterval(interval);
+//     }
+//   }, fadeStep);
+// }
 
 // === SPAWN ENNEMIS ===
 function spawnEnemy() {
@@ -518,7 +517,6 @@ function update() {
               enemy.width + 10,
               enemy.height + 10
             );
-            
           } else {
             drawCircle(enemy);
           }
@@ -532,7 +530,6 @@ function update() {
               enemy.width + 10,
               enemy.height + 10
             );
-            
           } else {
             drawRect(enemy);
           }
@@ -546,7 +543,6 @@ function update() {
               enemy.width + 10,
               enemy.height + 10
             );
-            
           } else {
             drawTriangle(enemy);
           }
@@ -598,18 +594,17 @@ function update() {
           player.shield = false;
           removePowerUp("shield");
         } else {
-          hitSound.currentTime = 0;
-          hitSound.play();
-          triggerFlash();
+          // hitSound.currentTime = 0;
+          // hitSound.play();
+          // triggerFlash();
 
           player.health--;
           updateHealthUI(player.health);
         }
-        
+
         enemies.splice(ei, 1);
       }
     });
-
 
     // === LANCEMENT DU BOSS ===
     if (enemiesKilled >= enemiesToKill) {
@@ -822,9 +817,9 @@ function update() {
         player.shield = false;
         removePowerUp("shield");
       } else {
-        hitSound.currentTime = 0;
-        hitSound.play();
-        triggerFlash();
+        // hitSound.currentTime = 0;
+        // hitSound.play();
+        // triggerFlash();
 
         player.health--;
         updateHealthUI();
@@ -848,10 +843,10 @@ function update() {
       spawnAccelerationTimer = 0;
     }
   }
-  if (flashOpacity > 0) {
-    ctx.fillStyle = `rgba(255, 0, 0, ${flashOpacity})`;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
+  // if (flashOpacity > 0) {
+  //   ctx.fillStyle = `rgba(255, 0, 0, ${flashOpacity})`;
+  //   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // }
   ctx.restore();
 }
 
@@ -986,9 +981,9 @@ function updateUI() {
 
 function updateHealthUI() {
   if (player.health <= 0) {
-    deathSound.currentTime = 0;
-    deathSound.play();
-    triggerFlash();
+    // deathSound.currentTime = 0;
+    // deathSound.play();
+    // triggerFlash();
     // message("Game Over!");
     // Active gameOver au lieu d'appeler resetGame()
     gameOver = true;
